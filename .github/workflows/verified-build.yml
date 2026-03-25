@@ -1,0 +1,241 @@
+# =============================================================================
+# Dr. Fraudsworth Verified Build Pipeline
+#
+# Produces deterministic Docker-built binaries for all 7 production programs
+# using solana-verify. Manual dispatch only — trigger when ready to deploy.
+#
+# Outputs:
+#   - verified-binaries: 7 deterministic .so files
+#   - verified-hashes:   JSON manifest of binary SHA256 hashes
+#   - verified-idls:     7 IDL JSON files matching the built programs
+#
+# The workflow generates IDLs via `anchor build` FIRST (non-deterministic),
+# saves them, then runs `solana-verify build` (deterministic .so files).
+# This ensures IDLs exist without anchor build overwriting verified binaries.
+#
+# Tool versions pinned to match local dev environment:
+#   Rust 1.93.0, Solana 3.0.13, Anchor 0.32.1, Node 22
+# =============================================================================
+
+name: Verified Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      cluster:
+        description: 'Target cluster (mainnet or devnet)'
+        required: true
+        default: 'mainnet'
+        type: choice
+        options:
+          - mainnet
+          - devnet
+
+env:
+  SOLANA_VERSION: "3.0.13"
+  ANCHOR_VERSION: "0.32.1"
+
+jobs:
+  verified-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      # Free disk space — Docker images + cargo cache need room
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo swapoff /swapfile 2>/dev/null || true
+          sudo rm -f /swapfile
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.93.0
+        uses: dtolnay/rust-toolchain@1.93.0
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-verified-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-verified-${{ runner.os }}-
+
+      - name: Cache Solana CLI
+        uses: actions/cache@v4
+        id: cache-solana
+        with:
+          path: ~/.local/share/solana/install
+          key: solana-${{ runner.os }}-${{ env.SOLANA_VERSION }}
+
+      - name: Install Solana CLI
+        if: steps.cache-solana.outputs.cache-hit != 'true'
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"
+
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      # libudev-dev required by hidapi (transitive dep of solana-verify and anchor-cli)
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
+      - name: Install solana-verify
+        run: cargo install solana-verify
+
+      - name: Install query-security-txt
+        run: cargo install query-security-txt || echo "::warning::query-security-txt install failed, will use strings fallback"
+
+      # Anchor CLI needed for IDL generation (anchor build produces target/idl/)
+      - name: Cache Anchor CLI
+        uses: actions/cache@v4
+        id: cache-anchor
+        with:
+          path: ~/.cargo/bin/anchor
+          key: anchor-${{ runner.os }}-${{ env.ANCHOR_VERSION }}
+
+      - name: Install Anchor CLI
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v${{ env.ANCHOR_VERSION }} anchor-cli
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Configure Solana CLI
+        run: |
+          solana config set --url localhost
+          solana-keygen new --no-bip39-passphrase --silent
+
+      # Step 1: Generate IDLs via anchor build FIRST
+      # anchor build produces IDLs at target/idl/*.json but NON-deterministic .so files.
+      # We need the IDLs but will overwrite the .so files with solana-verify next.
+      - name: Generate IDLs via anchor build
+        run: |
+          if [ "${{ inputs.cluster }}" = "devnet" ]; then
+            echo "=== Building for devnet (IDL generation) ==="
+            anchor build -p amm
+            anchor build -p transfer_hook
+            anchor build -p staking
+            anchor build -p epoch_program -- --features devnet
+            anchor build -p tax_program -- --features devnet
+            anchor build -p conversion_vault -- --features devnet
+            anchor build -p bonding_curve -- --features devnet
+          else
+            echo "=== Building for mainnet (IDL generation) ==="
+            for lib in amm transfer_hook tax_program epoch_program staking conversion_vault bonding_curve; do
+              echo "--- anchor build -p $lib ---"
+              anchor build -p "$lib"
+            done
+          fi
+
+      # Step 2: Save IDLs before solana-verify overwrites target/deploy/
+      - name: Save IDLs
+        run: cp -r target/idl target/idl-saved
+
+      # Step 3: Build all 7 programs with solana-verify (deterministic Docker builds)
+      # CRITICAL: For mainnet, do NOT pass any features. The default (no features)
+      # produces mainnet binaries. bonding_curve uses a 3-way cfg pattern, NOT compile_error!
+      - name: Verified build (deterministic)
+        run: |
+          PROGRAMS="amm transfer_hook tax_program epoch_program staking conversion_vault bonding_curve"
+
+          if [ "${{ inputs.cluster }}" = "devnet" ]; then
+            SAFE="amm transfer_hook staking"
+            FLAGGED="tax_program epoch_program conversion_vault bonding_curve"
+            for lib in $SAFE; do
+              echo "=== solana-verify build: $lib ==="
+              solana-verify build --library-name "$lib"
+              echo "Hash: $(solana-verify get-executable-hash target/deploy/${lib}.so)"
+            done
+            for lib in $FLAGGED; do
+              echo "=== solana-verify build: $lib (devnet) ==="
+              solana-verify build --library-name "$lib" -- --features devnet
+              echo "Hash: $(solana-verify get-executable-hash target/deploy/${lib}.so)"
+            done
+          else
+            for lib in $PROGRAMS; do
+              echo "=== solana-verify build: $lib (mainnet) ==="
+              solana-verify build --library-name "$lib"
+              echo "Hash: $(solana-verify get-executable-hash target/deploy/${lib}.so)"
+            done
+          fi
+
+      # Step 4: Restore saved IDLs (solana-verify may have clobbered target/idl/)
+      - name: Restore IDLs
+        run: cp -r target/idl-saved/* target/idl/
+
+      # Step 5: Verify security.txt is embedded in all 7 binaries
+      - name: Verify security.txt embedding
+        run: |
+          for so in target/deploy/{amm,transfer_hook,tax_program,epoch_program,staking,conversion_vault,bonding_curve}.so; do
+            name=$(basename "$so")
+            echo "=== $name ==="
+            if command -v query-security-txt &>/dev/null; then
+              query-security-txt "$so"
+            else
+              # Fallback: verify via strings
+              if strings "$so" | grep -q "drfraudsworth@gmail.com"; then
+                echo "PASS: security.txt found (strings fallback)"
+                strings "$so" | grep -A1 -E "^(name|project_url|contacts|policy|auditors|expiry)$"
+              else
+                echo "FAIL: security.txt NOT found in $name"
+                exit 1
+              fi
+            fi
+            echo ""
+          done
+
+      # Step 6: Generate hash manifest
+      - name: Generate hash manifest
+        run: |
+          echo '{' > verified-hashes.json
+          PROGRAMS="amm transfer_hook tax_program epoch_program staking conversion_vault bonding_curve"
+          FIRST=true
+          for lib in $PROGRAMS; do
+            hash=$(solana-verify get-executable-hash "target/deploy/${lib}.so")
+            if [ "$FIRST" = true ]; then
+              FIRST=false
+            else
+              echo ',' >> verified-hashes.json
+            fi
+            printf '  "%s": "%s"' "$lib" "$hash" >> verified-hashes.json
+          done
+          echo '' >> verified-hashes.json
+          echo '}' >> verified-hashes.json
+          echo "=== Hash Manifest ==="
+          cat verified-hashes.json
+
+      # Step 7: Upload artifacts
+      - name: Upload verified binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-binaries
+          path: target/deploy/*.so
+          retention-days: 90
+
+      - name: Upload hash manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-hashes
+          path: verified-hashes.json
+          retention-days: 90
+
+      - name: Upload IDLs
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-idls
+          path: target/idl/*.json
+          retention-days: 90

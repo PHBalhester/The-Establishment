@@ -1,0 +1,13 @@
+{
+  "name": "@dr-fraudsworth/shared",
+  "version": "0.0.1",
+  "description": "Shared constants, PDA seeds, and program IDs for Dr. Fraudsworth",
+  "main": "index.ts",
+  "types": "index.ts",
+  "peerDependencies": {
+    "@solana/web3.js": "^1.95.5"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.4.14"
+  }
+}

@@ -1,0 +1,169 @@
+# Arbitrage
+
+> *"This section is for the bots. You know who you are. The rest of you may find it educational, or possibly alarming."*
+
+---
+
+## What Triggers Arbitrage
+
+Two events create arbitrage opportunities:
+
+### 1. Tax Regime Flips (Every Epoch)
+
+Each epoch, the VRF roll may flip which token is the cheap side. When the cheap side changes, the cost of moving value through CRIME versus FRAUD changes, and the soft peg between the two tokens drifts. If the drift exceeds total trading friction, arbitrage is profitable.
+
+- Frequency: up to 48 times per day (mainnet)
+- Probability of flip: 75% per epoch
+- Magnitude: depends on tax differential (1-4% vs 11-14%)
+
+### 2. Carnage Events (~2x per Day)
+
+When the Carnage Fund triggers, it injects a large market-buy (up to 1,000 SOL) into a single pool. This creates a sudden, sharp price dislocation -- much larger than a typical tax flip.
+
+- Frequency: ~2 per day on mainnet (4.3% per epoch)
+- Magnitude: proportional to Carnage SOL balance (up to 1,000 SOL per event)
+- Direction: unpredictable (VRF byte 7 determines target)
+
+Carnage events produce the **largest arb windows** in the system because they inject sudden, concentrated buying pressure into one side of the peg.
+
+---
+
+## The Canonical Arb Route
+
+When the tax regime flips, the previous epoch's trading pressure leaves the tokens mispriced. The token that was cheap to buy last epoch is now overvalued. The token that was cheap to sell last epoch is now undervalued.
+
+**Example: CRIME was cheap last epoch, now FRAUD is cheap:**
+
+1. **Buy FRAUD** with SOL — it's undervalued AND cheap to buy (1-4% tax)
+2. **Sell CRIME** for SOL — it's overvalued AND cheap to sell (1-4% tax)
+
+The principle is always the same: **buy the undervalued token cheaply, sell the overvalued token cheaply, pocket the spread.** This continues until the prices converge and the spread no longer covers the fees.
+
+---
+
+## Fee Breakdown
+
+Every arb trade touches a SOL pool twice (buy and sell across epochs):
+
+| Hop | Pool | LP Fee | Tax | Total Friction |
+|-----|------|--------|-----|----------------|
+| 1. Buy cheap token | CRIME/SOL or FRAUD/SOL | 1% | 1-4% (low buy tax) | 2-5% |
+| 2. Sell after flip | CRIME/SOL or FRAUD/SOL | 1% | 1-4% (low sell tax) | 2-5% |
+
+### Total Round-Trip Friction
+
+- **Minimum (best case):** 1% + 1% + 1% + 1% = 4% (LP fees only, both taxes at 1%)
+- **Typical:** 1% + 2% + 1% + 3% = 7% (taxes at 2% and 3%)
+- **Maximum (worst case):** 1% + 4% + 1% + 4% = 10% (both taxes at 4%)
+
+Note: these are multiplicative, not additive. The actual math uses `(1 - fee1) * (1 - fee2) * ...`, so the effective round-trip retention is slightly different from simple subtraction.
+
+---
+
+## Profitability
+
+The arb profit comes from how far apart the token prices drifted in the previous epoch. More volume in the previous epoch means more buy pressure on the cheap side and more sell pressure on the expensive side, which means a wider mispricing when the taxes flip.
+
+High volume epoch → big price gap → lots of arb available after the flip.
+Low volume epoch → small price gap → thin or no arb available.
+
+The lower the friction on both sides of the trade, the more of that spread you actually keep as profit.
+
+---
+
+## Competition
+
+You are not the only bot.
+
+Multiple arbitrageurs compete for the same opportunities. This competition has several effects:
+
+- **Speed matters.** The first transaction after a tax flip captures the largest spread. Milliseconds count.
+- **Margins compress.** Competition pushes profit toward zero over time as more bots enter.
+- **The protocol benefits.** Bot competition is not a bug -- it is a feature. More arb transactions mean more tax revenue, which funds more game rewards. The protocol does not care who captures the arb; it cares that someone does.
+
+---
+
+## Carnage Arb Windows
+
+Carnage events create the largest and most lucrative arb windows because:
+
+1. **Sudden injection:** Up to 1,000 SOL of buying pressure hits one pool in a single transaction
+2. **Unpredictable timing:** Bots cannot pre-position (VRF byte 5 determines trigger, unknown until reveal)
+3. **Large dislocation:** The price spike from a Carnage buy is typically much larger than the drift from a tax flip
+4. **Double disruption (2% path):** On the rare Sell Then Buy path, two pools are hit simultaneously -- one with selling pressure, one with buying pressure
+5. **Atomic execution:** Carnage fires in the same TX as `consume_randomness` (during the lock window), so bots must react to the on-chain event, not predict it
+
+After a Carnage event, the arb opportunity exists until bots trade the price back toward the peg. This can happen within seconds on a liquid market.
+
+---
+
+## Execution Considerations
+
+### Transfer Hook Accounts
+
+All CRIME and FRAUD transfers invoke the Transfer Hook Program. Your transaction must include the 4 extra accounts required by Token-2022's transfer hook resolution:
+
+| # | Account | Derivation |
+|---|---------|------------|
+| 1 | extra_account_meta_list | PDA: ["extra-account-metas", mint] |
+| 2 | whitelist_source | PDA: ["whitelist", source_token_account] |
+| 3 | whitelist_destination | PDA: ["whitelist", destination_token_account] |
+| 4 | hook_program | Transfer Hook program ID |
+
+These are resolved by the SDK's `createTransferCheckedWithTransferHookInstruction`, but bot operators building raw transactions need to include them manually.
+
+### MEV Protection
+
+The tax regime is determined by Switchboard VRF, which provides strong MEV protection:
+
+- The VRF result is unknown until the oracle reveals inside the TEE
+- Tax updates and Carnage execution happen atomically within the consume_randomness transaction
+- There is no window to front-run the regime change itself
+
+However, the arb opportunity **after** the regime change is fair game. Once the new taxes are live, it is a race.
+
+### Transaction Size
+
+Depending on the path, you may need to use **Address Lookup Tables (ALTs)** and **versioned transactions (v0)** to fit within Solana's 1,232-byte transaction limit. The protocol maintains a protocol-wide ALT with 46 addresses.
+
+### Protocol Minimum Output Floor
+
+The Tax Program enforces a minimum output floor of 50% of expected output. You cannot set `minimum_output = 0` to avoid slippage checks. This protects against sandwich attacks but means your bot needs to compute a reasonable slippage tolerance for each trade.
+
+---
+
+## What You Need to Build a Bot
+
+If you are considering building an arb bot for this protocol, here is what you need to know:
+
+1. **Monitor epoch transitions.** Subscribe to EpochState account changes or `TaxesUpdated` events to detect tax regime changes in real time.
+
+2. **Compute the spread.** Read pool reserves from both SOL pools and calculate whether the price dislocation exceeds your total fee threshold.
+
+3. **Execute quickly.** The first mover captures the most value. Use priority fees, optimized transaction construction, and direct RPC connections.
+
+4. **Handle transfer hooks.** All CRIME and FRAUD transfers invoke the Transfer Hook Program. Your transaction must include the 4 extra accounts per hooked transfer.
+
+5. **Account for both directions.** The cheap side can be either CRIME or FRAUD. Your bot needs to handle both routes.
+
+6. **Watch for Carnage.** Carnage events create the biggest opportunities but are unpredictable. Your bot should react to `CarnageExecuted` events as fast as it reacts to tax flips.
+
+7. **Respect the minimum output floor.** The 50% floor on `minimum_output` means you need to compute expected output from pool reserves before submitting trades.
+
+---
+
+## Key Numbers
+
+| Parameter | Value |
+|-----------|-------|
+| Epoch duration | ~30 min (mainnet), ~5 min (devnet) |
+| Epochs per day | 48 (mainnet) |
+| Flip probability | 75% per epoch |
+| SOL pool LP fee | 1% |
+| Low tax band | 1-4% |
+| High tax band | 11-14% |
+| Carnage probability | ~4.3% per epoch |
+| Carnage max buy | 1,000 SOL |
+| Carnage tax rate | 0% (1% LP fee only) |
+| Min output floor | 50% of expected output |
+| Hook accounts per transfer | 4 |

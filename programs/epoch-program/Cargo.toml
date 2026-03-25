@@ -1,0 +1,31 @@
+[package]
+name = "epoch-program"
+version = "0.1.0"
+description = "Dr Fraudsworth Epoch Program - VRF-driven tax regime coordination"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.32.1", features = ["token", "token_2022", "associated_token"] }
+solana-security-txt = "1.1.1"
+spl-token-2022 = "8.0.1"
+switchboard-on-demand = "=0.11.3"
+
+[dev-dependencies]
+proptest = "1.9"
+litesvm = "0.9.1"
+solana-sdk = "2.2"
+solana-program = "2.2"
+sha2 = "0.10"
+
+[features]
+default = []
+devnet = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]

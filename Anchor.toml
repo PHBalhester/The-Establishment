@@ -1,0 +1,40 @@
+[toolchain]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+amm = "5JsSAL3kJDUWD4ZveYXYZmgm1eVqueesTZVdAvtZg8cR"
+bonding_curve = "DpX3AhSU3BELfBiGbmBMYLPp8VAy3jbEVt6bQjrxUarV"
+epoch_program = "4Heqc8QEjJCspHR8y96wgZBnBfbe3Qb8N6JBZMQt9iw2"
+staking = "12b3t1cNiAUoYLiWFEnFa4w6qYxVAiqCWU7KZuzLPYtH"
+tax_program = "43fZGRtmEsP7ExnJE1dbTbNjaP1ncvVmMPusSeksWGEj"
+transfer_hook = "CiQPQrmQh6BPhb9k7dFnsEs5gKPgdrvNKFc5xie5xVGd"
+conversion_vault = "5uawA6ehYTu69Ggvm3LSK84qFawPKxbWgfngwj15NRJ"
+
+[programs.localnet]
+amm = "5JsSAL3kJDUWD4ZveYXYZmgm1eVqueesTZVdAvtZg8cR"
+bonding_curve = "DpX3AhSU3BELfBiGbmBMYLPp8VAy3jbEVt6bQjrxUarV"
+epoch_program = "4Heqc8QEjJCspHR8y96wgZBnBfbe3Qb8N6JBZMQt9iw2"
+fake_tax_program = "7i38TDxugSPSV9ciUNTbnEeBps5C5xiQSSY7kNG65YnJ"
+mock_tax_program = "9irnHg1ddyLeeDTcuXYMa8Zby7uafL5PpkZ7LPfzzNw9"
+staking = "12b3t1cNiAUoYLiWFEnFa4w6qYxVAiqCWU7KZuzLPYtH"
+stub_staking = "StUbofRk12S7JrEUoQJFjMe6FmACNoRpbNMyjn311ZU"
+tax_program = "43fZGRtmEsP7ExnJE1dbTbNjaP1ncvVmMPusSeksWGEj"
+transfer_hook = "CiQPQrmQh6BPhb9k7dFnsEs5gKPgdrvNKFc5xie5xVGd"
+conversion_vault = "5uawA6ehYTu69Ggvm3LSK84qFawPKxbWgfngwj15NRJ"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/staking.ts tests/cross-program-integration.ts"
+test-account-validation = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/security-account-validation.ts"
+test-integration = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/integration/**/*.test.ts"
+test-lifecycle = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/integration/lifecycle.test.ts"
+test-security = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/security.ts"

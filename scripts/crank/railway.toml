@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "cd ../.. && npm install"
+
+[deploy]
+startCommand = "cd ../.. && npx tsx scripts/crank/crank-runner.ts"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

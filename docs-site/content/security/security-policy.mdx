@@ -1,0 +1,130 @@
+# Security Policy
+
+Dr. Fraudsworth's Fantastical Finance Factory takes security seriously. This policy outlines how to report vulnerabilities responsibly and what to expect when you do.
+
+---
+
+## Scope
+
+This policy covers all on-chain programs in the Dr. Fraudsworth protocol:
+
+- **AMM** --- Constant-product automated market maker
+- **Transfer Hook** --- Token-2022 transfer hook with whitelist enforcement
+- **Tax Program** --- Epoch-driven tax collection and Carnage Fund logic
+- **Epoch Program** --- Switchboard VRF randomness and epoch transitions
+- **Staking** --- PROFIT token staking and SOL yield distribution
+- **Conversion Vault** --- Faction token to PROFIT conversion
+- **Bonding Curve** --- Fair-launch token distribution with coupled graduation
+
+It also covers the frontend application at [fraudsworth.fun](https://fraudsworth.fun).
+
+### Out of Scope
+
+- Social engineering attacks against team members
+- Denial-of-service attacks
+- Third-party services (Switchboard, Helius, Solana validators)
+- Issues already disclosed in our audit reports
+
+---
+
+## How to Report
+
+If you discover a vulnerability, please report it privately. **Do not open a public GitHub issue.**
+
+**Preferred contact (in order):**
+
+1. **Email:** [drfraudsworth@gmail.com](mailto:drfraudsworth@gmail.com)
+2. **Twitter/X:** [@fraudsworth](https://x.com/fraudsworth)
+
+### What to Include
+
+- A clear description of the vulnerability
+- Steps to reproduce the issue
+- Your assessment of the impact (e.g., fund loss, state corruption, denial of service)
+- Any proof-of-concept code, if applicable
+
+The more detail you provide, the faster we can assess and respond.
+
+---
+
+## Response Timeline
+
+| Stage | Timeframe |
+|-------|-----------|
+| Acknowledgement | Within **48 hours** |
+| Initial assessment | Within **7 days** |
+| Fix deployed (if confirmed) | As soon as practical, depending on severity |
+| Public disclosure | After fix is deployed, coordinated with reporter |
+
+---
+
+## Responsible Disclosure
+
+We ask that security researchers:
+
+- **Allow 90 days** from the initial report before any public disclosure, to give us time to investigate, develop, and deploy a fix
+- **Do not exploit** the vulnerability beyond what is necessary to demonstrate it
+- **Do not access** or modify other users' data or funds
+- **Act in good faith** --- we will do the same
+
+---
+
+## Bug Bounty
+
+A formal bug bounty program through ImmuneFi is planned for when the protocol has sufficient revenue to fund meaningful payouts. Until then, good-faith reports will be credited publicly (with your permission) and we will work with reporters on appropriate recognition.
+
+---
+
+## Audits
+
+The protocol has undergone four internal security audits. All critical and high-severity findings have been fixed and verified. An external professional audit is planned before authority governance transfer.
+
+### Stronghold of Security (SOS) --- On-Chain Smart Contract Audit
+
+**Scope:** All 7 on-chain Solana/Anchor programs (AMM, Transfer Hook, Tax, Epoch, Staking, Conversion Vault, Bonding Curve).
+
+**Method:** Adversarial hypothesis-driven testing. 142 attack hypotheses investigated across all program instructions, covering exploit patterns including authority theft, front-running, arithmetic overflow, PDA manipulation, and cross-program invocation abuse.
+
+**Findings:** 4 Critical, 5 High, 5 Medium, 6 Low, 8 Informational. Key critical issues included a bonding curve authority gap, transfer hook initialization front-running, and a combined deployment attack vector.
+
+**Resolution:** All critical and high-severity findings fixed and verified across 4 verification rounds. 100% instruction coverage, 100% exploit pattern coverage.
+
+### Dinh's Bulwark (DB) --- Off-Chain Security Audit
+
+**Scope:** Everything outside the on-chain programs --- Next.js frontend, API routes, crank runner bot, PostgreSQL database layer, deployment scripts, shared constants, and infrastructure configuration.
+
+**Method:** 132 hypothesis investigations plus 10 combination (attack chain) investigations. Covered authentication, secret management, supply chain security, operational resilience, and data pipeline integrity.
+
+**Findings:** 3 Critical, 13 High, 22 Medium, 23 Low. Key critical issues included an npm supply chain vulnerability via a gitignored lockfile, bonding curve authority gaps (cross-boundary with SOS), and transfer hook initialization front-running (cross-boundary with SOS).
+
+**Resolution:** 42 findings fixed, 5 accepted as deliberate design decisions with documented rationale, 2 partially fixed with remaining gaps tracked. All 3 critical findings fixed and stable. Zero regressions across 4 verification rounds.
+
+### Book of Knowledge (BOK) --- Mathematical Verification
+
+**Scope:** 6 of 7 programs (Transfer Hook excluded --- no arithmetic logic). Focused on arithmetic safety, economic invariants, and state machine correctness.
+
+**Method:** Three-layer verification combining formal proofs (Kani), property-based stress testing (Proptest with 10,000+ iterations per property), and runtime integration tests (LiteSVM). 140 total invariants tested.
+
+**Findings:** 18 invariants formally proven (mathematical certainty), 116 stress-tested and passing. 3 real findings at Low-to-Medium severity, including a vault solvency rounding dust issue and a u128 overflow at extreme staking values.
+
+**Resolution:** All findings resolved. Formal proofs provide mathematically guaranteed bounds on all core arithmetic (tax calculations, staking rewards, swap outputs, bonding curve pricing).
+
+### VulnHunter --- Variant Analysis
+
+**Scope:** Full protocol (7 on-chain programs + TypeScript frontend and scripts). Variant analysis seeded from 28 SOS findings and 61 BOK findings.
+
+**Method:** Systematic variant hunting --- for each confirmed vulnerability, searched the entire codebase for similar patterns, related attack surfaces, and missed instances. Analyzed all 42 signer authority patterns across every program instruction.
+
+**Findings:** 8 new findings (0 Critical, 0 High, 2 Medium, 3 Low, 3 Informational). All 42 signer authority patterns confirmed secure. Zero new critical or high-severity issues discovered, indicating the prior audits achieved comprehensive coverage.
+
+**Resolution:** All findings addressed or documented.
+
+---
+
+## Contact
+
+For security matters: [drfraudsworth@gmail.com](mailto:drfraudsworth@gmail.com)
+
+For general inquiries: [@fraudsworth on Twitter/X](https://x.com/fraudsworth)
+
+*This policy was last updated on March 20, 2026.*

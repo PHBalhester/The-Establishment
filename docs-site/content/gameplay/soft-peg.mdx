@@ -1,0 +1,92 @@
+import { Callout } from 'nextra/components'
+
+# The Soft Peg
+
+> *"CRIME and FRAUD are not the same token. Like identical twins who insist they are individuals. They are correct, technically. But we all know the truth."*
+
+---
+
+## What Is the Soft Peg?
+
+CRIME and FRAUD are **softly pegged** to each other. Not through an oracle, not through a stability mechanism, and not through any admin intervention. The peg exists because of how the protocol is structured.
+
+Both tokens are seeded identically at launch -- same supply (1B each), same pool seeding ratios, same starting price. Both are subject to the same tax regime (just with mirrored assignments), and both are burned by Carnage with equal probability.
+
+The "peg" is not a hard 1:1 ratio in SOL terms — their SOL prices will differ as the tax regime pushes them apart. The soft peg comes from the fact that CRIME and FRAUD are technically **1:1 in value via the conversion vault**. 100 CRIME = 1 PROFIT. 100 FRAUD = 1 PROFIT. Therefore 100 CRIME = 100 FRAUD in PROFIT terms. When the SOL price ratio drifts too far from this fundamental equivalence, arbitrage becomes profitable and traders push it back.
+
+---
+
+## How the Peg Gets Broken and Restored
+
+Let's walk through it with numbers.
+
+**Start of Epoch 1:** Both CRIME and FRAUD are at 1M MCAP. CRIME is the cheap side.
+
+- CRIME is cheap to buy (3%), expensive to sell (12%)
+- FRAUD is expensive to buy (13%), cheap to sell (2%)
+
+Buyers pile into CRIME because it's cheap. Sellers exit FRAUD because it's cheap to sell. By the end of the epoch:
+
+- **CRIME:** 1.15M MCAP (bid up by buy pressure)
+- **FRAUD:** 0.85M MCAP (pushed down by sell pressure)
+
+**Epoch 2: Taxes flip.** Now FRAUD is the cheap side.
+
+- FRAUD is cheap to buy (2%), expensive to sell (11%)
+- CRIME is expensive to buy (12%), cheap to sell (3%)
+
+Now there is instant profit on the table. FRAUD is undervalued at 0.85M and cheap to buy (2% tax). CRIME is overvalued at 1.15M and cheap to sell (3% tax). Traders buy the undervalued FRAUD cheaply, sell the overvalued CRIME cheaply, and pocket the spread. This continues until the prices converge and the spread no longer covers the fees.
+
+---
+
+## What Keeps the Peg Stable
+
+Several forces work together to maintain the soft peg:
+
+### 1. Arbitrage Competition
+
+Multiple bots compete to capture arbitrage opportunities. This competition means the peg is restored quickly -- usually within seconds of a tax flip. The first bot to trade captures the largest spread, and each subsequent trade compresses the remaining opportunity.
+
+### 2. Identical Structure
+
+Both CRIME and FRAUD have identical starting pool depths, identical LP fees and identical relationships to the protocol.
+
+### 3. Frequent Regime Flips
+
+The 75% flip probability means the cheap side changes most epochs. This prevents one token from being persistently undervalued. Over time, CRIME and FRAUD spend roughly equal time on each side.
+
+### 4. Carnage Events
+
+Carnage buys target CRIME or FRAUD with equal probability (50/50, VRF-determined). Over many events, the buying pressure and burns are distributed evenly between both tokens.
+
+---
+
+## The No-Arbitrage Band
+
+Not every tax flip creates a profitable arbitrage opportunity. The combined LP fees and taxes create a "band" around the peg where trading is not profitable:
+
+| Scenario | Typical Arbitrage Potential |
+|----------|---------------------------|
+| Wide flip (1% vs 14%) | Large band shift, very profitable |
+| Moderate flip (3% vs 12%) | Decent arbitrage opportunity |
+| Narrow flip (4% vs 11%) | Thin margins |
+| No flip (same side persists) | Generally no arbitrage |
+
+When the price ratio sits inside the no-arbitrage band, neither direction is profitable after fees. When a tax flip or Carnage event pushes the ratio outside the band, one direction becomes profitable and traders move in.
+
+---
+
+## Why the Peg Matters
+
+The soft peg is not just an academic curiosity. It is the **engine of the entire protocol**.
+
+- The peg breaking creates arbitrage opportunities
+- Arbitrage generates and amplifies volume
+- Volume generates taxes
+- Taxes fund SOL rewards for PROFIT stakers
+- Taxes fund Carnage
+- Carnage breaks the peg again
+
+Without the peg, there is no arbitrage. Without arbitrage, there is less volume. With less volume, there is less taxes. With less taxes, there is less rewards. The soft peg mechanism is the foundation that everything else is built on.
+
+> *"They said a peg that breaks on purpose is a contradiction. I said it is a business model."*

@@ -1,0 +1,120 @@
+# Verifiable Randomness
+
+Randomness is the beating heart of the protocol. Every 30 minutes, a new epoch begins, and a random number determines the tax regime --- which token is cheap to buy, which is expensive, and the exact tax rates applied. Randomness also governs whether the Carnage Fund triggers and which token it targets.
+
+If this randomness could be predicted, manipulated, or front-run, the entire system would collapse. Whoever controls the dice controls the game. So the protocol uses dice that nobody controls.
+
+---
+
+## Why Not Block Hashes?
+
+Many protocols use Solana slot hashes as a source of randomness. This is convenient but fundamentally insecure. Validators produce blocks, and a sufficiently motivated validator can influence the hash by reordering transactions, skipping slots, or choosing which block to propagate.
+
+For a protocol where randomness directly determines trading advantage, block hash randomness is not acceptable.
+
+---
+
+## Switchboard VRF with TEE
+
+The protocol uses **Switchboard On-Demand**, a decentralized oracle network on Solana, for its VRF (Verifiable Random Function) implementation. A VRF produces two things:
+
+1. A **random output** --- indistinguishable from true randomness
+2. A **proof** --- a cryptographic certificate that the output was generated correctly
+
+Switchboard goes further by running the random number generation inside a **Trusted Execution Environment** (TEE) --- a hardware-isolated enclave that even the oracle operator cannot peek into. The randomness is generated inside this enclave, signed with its attestation key, and published on-chain.
+
+---
+
+## The Commit-Reveal-Consume Flow
+
+The protocol follows a three-step flow across two transactions to ensure no party can act on randomness before it is finalized:
+
+**TX 1:** Create fresh randomness account (Switchboard SDK)
+
+**TX 2: Commit**
+1. Switchboard commit instruction
+2. Protocol's `trigger_epoch_transition` — binds randomness account to this epoch, advances epoch number
+
+*~3 slots pass while the oracle generates and reveals*
+
+**TX 3: Reveal + Consume**
+1. Switchboard reveal instruction
+2. Protocol's `consume_randomness` — reads revealed VRF bytes, derives new tax rates, checks Carnage trigger
+3. `execute_carnage_atomic` (if Carnage triggered) — executes buyback atomically in the same TX
+
+### Step 1: Commit
+
+At the start of each epoch transition, the protocol **commits** a randomness request to Switchboard by calling `trigger_epoch_transition`. This instruction:
+
+- Validates the epoch boundary has been reached
+- Stores the randomness account pubkey in `pending_randomness_account`
+- Advances the epoch number
+- Pays a 0.001 SOL bounty to the caller from the Carnage Fund vault
+
+The randomness account is **bound** at this point --- it cannot be swapped for a different one later.
+
+### Step 2: Reveal
+
+The Switchboard oracle generates a random number inside its TEE-secured hardware and posts the result on-chain with a cryptographic proof. The Solana runtime verifies the proof. If verification fails, the transaction is rejected.
+
+### Step 3: Consume
+
+`consume_randomness` reads the revealed VRF bytes and derives all epoch parameters:
+
+| Byte | Purpose | How it works |
+|------|---------|-------------|
+| 0 | Cheap side flip | < 192 = flip (75% probability) |
+| 1 | CRIME low rate | 1%, 2%, 3%, or 4% |
+| 2 | CRIME high rate | 11%, 12%, 13%, or 14% |
+| 3 | FRAUD low rate | 1%, 2%, 3%, or 4% |
+| 4 | FRAUD high rate | 11%, 12%, 13%, or 14% |
+| 5 | Carnage trigger | < 11 = triggers (~4.3% chance) |
+| 6 | Carnage action | < 5 = Sell (~2%), 5+ = Burn (~98%) |
+| 7 | Carnage target | < 128 = CRIME, 128+ = FRAUD |
+
+All outcomes are derived **deterministically** from the single random value. Given the same random number, anyone can independently verify that the protocol computed the correct results.
+
+---
+
+## Anti-Reroll Protection
+
+A subtle but critical security property: the protocol **binds to a specific randomness account at commit time**. This prevents "result shopping," where an attacker:
+
+1. Requests a random number
+2. Sees the result
+3. Discards it if unfavorable
+4. Requests a new one until they get a result they like
+
+The binding is enforced on-chain — `consume_randomness` verifies that the randomness account matches the one stored at commit time. If they don't match, the transaction fails.
+
+Once committed, that is the randomness account that will be used. Period. There is no mechanism to substitute a different request after seeing the result.
+
+---
+
+## Timeout Recovery
+
+What happens if the Switchboard oracle fails to reveal? The protocol does not get stuck:
+
+1. **Wait for timeout:** `VRF_TIMEOUT_SLOTS = 300` (~2 minutes)
+2. **Create fresh randomness:** A new randomness account may be assigned to a different oracle
+3. **Call `retry_epoch_vrf`:** Overwrites the pending state with the new randomness account
+4. **Proceed with reveal + consume** as normal
+
+This is a known operational consideration: each randomness account is assigned to a specific oracle. If that oracle is down, the only path forward is creating a fresh randomness account (which may get a different, working oracle). Gateway rotation does not work --- alternative gateways serve different oracles whose signatures fail on-chain.
+
+The protocol is transparent about this limitation. Timeout recovery has been battle-tested on devnet and is handled automatically by the crank bot.
+
+---
+
+## What This Means for You
+
+As a user, verifiable randomness gives you concrete guarantees:
+
+- **Nobody can predict** the next epoch's tax rates before the VRF resolves
+- **Nobody can control** which token becomes cheap or expensive
+- **Nobody can front-run** epoch transitions with insider knowledge
+- **Nobody can manipulate** Carnage triggers or targets
+
+This applies equally to the team, to whales, to MEV bots, and to validators. The randomness is fair for everyone because it is controlled by no one.
+
+> *"Even the Doctor himself cannot peek at tomorrow's results. Trust us, he's tried."*

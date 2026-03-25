@@ -1,0 +1,280 @@
+{
+  "timestamp": "2026-03-13T22:09:33.031Z",
+  "deployment": {
+    "schemaVersion": 1,
+    "generatedAt": "2026-03-13T21:40:05.135Z",
+    "cluster": "devnet",
+    "programs": {
+      "amm": "5JsSAL3kJDUWD4ZveYXYZmgm1eVqueesTZVdAvtZg8cR",
+      "transferHook": "CiQPQrmQh6BPhb9k7dFnsEs5gKPgdrvNKFc5xie5xVGd",
+      "taxProgram": "43fZGRtmEsP7ExnJE1dbTbNjaP1ncvVmMPusSeksWGEj",
+      "epochProgram": "4Heqc8QEjJCspHR8y96wgZBnBfbe3Qb8N6JBZMQt9iw2",
+      "staking": "12b3t1cNiAUoYLiWFEnFa4w6qYxVAiqCWU7KZuzLPYtH",
+      "conversionVault": "5uawA6ehYTu69Ggvm3LSK84qFawPKxbWgfngwj15NRJ",
+      "bondingCurve": "DpX3AhSU3BELfBiGbmBMYLPp8VAy3jbEVt6bQjrxUarV"
+    },
+    "mints": {
+      "crime": "4GMPFhVVxUVZPirn5FQ416yKTe2o7hzppyhKVSjBs71h",
+      "fraud": "EUduidMABqvtQTxHQ3y7uREAsBd9Dgck6SvMUnKKpXp6",
+      "profit": "Byex7RkyrVHX7rdbn7Gy48Cm3bENNs6DoRyUW68w27LR"
+    },
+    "pdas": {
+      "adminConfig": "7UVrSiyoPbncjACGqCs3yZSRzQU2ajrKqqzpAuZ5jDCg",
+      "swapAuthority": "5jy6VQsV9zqSbUUE9qMV8ehifu2QzYrsTNb6JPh1uMFj",
+      "taxAuthority": "A3KfTbEsvxN7e2c4b6iy5jg4fBFHaEBZNhnvTfavRwAS",
+      "epochState": "69jAwevgJFNCV7wW3yUouWqtdXzrgmSU95hZ9Zx97u7a",
+      "stakePool": "BqTUuryqjWpJEzhT8z2WRGp9gdY6tSLVT6bvKTyYAfQU",
+      "escrowVault": "92pctC88SKVNkYyZF1uHkNfGs3KCbvnQN2o11PB4idcW",
+      "stakeVault": "qMkCMtUyBq5UN6brJL2DkgfEDLojHxSoVAcvLWVbz9A",
+      "whitelistAuthority": "GXDnUUZAMnGSo8yXKpETesakJFeeVse79XLDzdziWbP",
+      "carnageFund": "DUojt571sQgu8ibjv8psSoASLPsAkCzAWMNuhwmjGX31",
+      "carnageSolVault": "AkC9JtX91aWsU6qWJu1r1yzEZ3AHwHecP7qtR76iurKu",
+      "carnageCrimeVault": "9ozXSv4hwo4HvczEy8xWZ9nkkuMXKVJKQpZayLg7KDfS",
+      "carnageFraudVault": "GJhdBXSkDS3CpoHx4x32dGEhGWAdif5jtT5hAVvM9eDN",
+      "carnageSigner": "FEVYenFYHnWSK7ucRtiRoChkFSpVjgwV3dLrw7Fwxj1d",
+      "stakingAuthority": "DmdCMjMMMV7UJCP5MY1RzMXe5FFzJksvjgcfT51r99Yb",
+      "wsolIntermediary": "ACwqz5TZhahDMNQkW1wKWCz7FbjBko1bBWrvvfRJgCpw",
+      "vaultConfig": "G5EpgauoCZbVRnKkRgFRvQxSgcjRjfV5jAkmyXdHHBLx",
+      "vaultCrime": "BGfCNMJTHKYkNSPtJYaecmjdUWiTUCXXMtHdyuxDdcY4",
+      "vaultFraud": "ArUukW76AMEUQ1kEgSNnGzF5oxdRMc3xAgK29RxTCXFU",
+      "vaultProfit": "8Yenm3Vm3EHA51vyQrnD5oKSL5Hbo2UWspafQeJpGLvB"
+    },
+    "pools": {
+      "crimeSol": {
+        "pool": "6VSgKBS4qsJd6w6drtWEvc8wUo2Eqm6iNL6Fd6oUxJ6Q",
+        "vaultA": "FXTY5XanzDe9dqFUPUX4nh7UEVYB3aVr759VgingVbo2",
+        "vaultB": "AiY1PXgdb1izZKVKC3RdXVpiTdZzvD1YM4d5Nxprrxvm"
+      },
+      "fraudSol": {
+        "pool": "ERGts2Vs7oHudbsNX7iCZX5So84qSvLo3HP66auxMFWf",
+        "vaultA": "AMUxSZYBn3w4TMXUPNGXouySUDKq3EBJc9i9DCBmaeef",
+        "vaultB": "2BGwf5382miDKi9anAsJG7vJfLv1qCKJmgb816WXm3hx"
+      }
+    },
+    "curvePdas": {
+      "crime": {
+        "curveState": "x7vJyebHsMXq5DjDsvQmKkfdVcL31qn7tH9J5e5ET3w",
+        "tokenVault": "EcBeRddSsMJn7bkNN5qjeh2HK7d1jx8MDF9id8GGM2bY",
+        "solVault": "5FPB1vfxkmAC6tqviyuXNzhBN7xC9C7ZDeHn7hXSjtpe",
+        "taxEscrow": "3unXbUYmYC3SnJrJQ45mAUk5FJLiwCX8ncutsEjgrQd8"
+      },
+      "fraud": {
+        "curveState": "AT6bPwNT2MYuNSgYaGAbu6CZY5kNAi4KrHLjekDPqZQJ",
+        "tokenVault": "AarpF7N2CEJBKDMvTvoAxQtZsCrtpDK8rSUxr7X9Sfjs",
+        "solVault": "BwrEhZhzzPhy2LtedzArUANgJnwK3Q3QGyTJJpSDQcjp",
+        "taxEscrow": "CXEEjY9HEwpti44nJArLBnwuRuroZXmjQ43Bbbf2qjpz"
+      }
+    },
+    "hookAccounts": {
+      "crime": "5WgVmVwf4ehvq8orq4ffnLtvn8HAGWBsk1tDS6WecXVu",
+      "fraud": "8XAhPF6oaXmrAFE1DQtAiwcT8q2SLz2e4LPvHKCefLFJ",
+      "profit": "EPwL2Ww8BRSRJrWSvNaFxNu1HUkPDekgcFMwa3K7rKEs"
+    },
+    "alt": "8Vv3ZskjpW7by7ECpTx8jwgwVvxiSEj1aLEDTtTAQguL",
+    "treasury": "8kPzhQoUPx7LYM18f9TzskW4ZgvGyq4jMPYZikqmHMH4",
+    "authority": {
+      "deployer": "8kPzhQoUPx7LYM18f9TzskW4ZgvGyq4jMPYZikqmHMH4",
+      "squadsVault": null,
+      "transferredAt": null
+    }
+  },
+  "actions": [
+    {
+      "wallet": "4uejGtgcp3AEaxNVznxavGKWYbsc8WWr1yvVczMDk9VH",
+      "walletIndex": 0,
+      "curve": "CRIME",
+      "action": "buy",
+      "solAmount": 3000000,
+      "txSig": "5c1VczqdJ6Cmpr4cYwBE342JL4n588FkVirhF51JfgzpM63g5KY4fyEmiwG4eC5Xz4YBuoNv6xL2Kt8uq3nrZSpt",
+      "slot": 448281881
+    },
+    {
+      "wallet": "ErQ5VGLkSR5HodoTzzWsfCJGA1iwHgNecdk1A9xxhcRn",
+      "walletIndex": 1,
+      "curve": "CRIME",
+      "action": "buy",
+      "solAmount": 50000000,
+      "txSig": "4dZ4QnsYctBgjcxzfCYw8u8Wt5xL7Yu9PmBmMhbR4uzTimfyDuWNHP4UcQqdLA76yMMHJVL8a8Tq6HiTXVhmZnDz",
+      "slot": 448281886
+    },
+    {
+      "wallet": "8za7ZRZpRcN3KxKMLtZAgqSawY6gTJtjqCaWafUhtUGv",
+      "walletIndex": 2,
+      "curve": "FRAUD",
+      "action": "buy",
+      "solAmount": 100000000,
+      "txSig": "5B9QJSFGkocSQUdEGxgcK8LbV1zTKaDDmDEtWs9vvi2H8hMCCBKsFYQCTCKkS7uUYFpvzXNbpXABwDibF3Ms3GxD",
+      "slot": 448281892
+    },
+    {
+      "wallet": "GZ1bv95QNoe4abdaZwr1EKuAjH3ExEQ5RNzroppHkz1Z",
+      "walletIndex": 3,
+      "curve": "CRIME",
+      "action": "buy",
+      "solAmount": 20000000,
+      "txSig": "3p4x2LaFXweAaJsaDrcMDCZDizE2WxK82WQu5e8LKSv5qhgv4kXJW4oprQdnsbTwWZ1ux7xDjVaLYDVWj1qEutz7",
+      "slot": 448281897
+    },
+    {
+      "wallet": "GZ1bv95QNoe4abdaZwr1EKuAjH3ExEQ5RNzroppHkz1Z",
+      "walletIndex": 3,
+      "curve": "FRAUD",
+      "action": "buy",
+      "solAmount": 20000000,
+      "txSig": "41gRsMCtgtRTEGVXsYRypR18ABNZm2tosDNJon6Q3Tobx2UYnKfQG2FeaoWrwh3CVQis47vL77GNTHwabmUFPiEc",
+      "slot": 448281903
+    },
+    {
+      "wallet": "5W6pK2XfkxjhbZY29RNoYBHxKW8GUYUNvyyJBfQab939",
+      "walletIndex": 4,
+      "curve": "FRAUD",
+      "action": "buy",
+      "solAmount": 50000000,
+      "txSig": "63CPp1eLrYACixcYXfdHVyD5zuEFBegaXLJEcVE3ZCMNAERAWQFZ4JNGk6gkDSqcRFG6SMrFiQjgxkYhDj23pqxy",
+      "slot": 448281908
+    },
+    {
+      "wallet": "5W6pK2XfkxjhbZY29RNoYBHxKW8GUYUNvyyJBfQab939",
+      "walletIndex": 4,
+      "curve": "FRAUD",
+      "action": "sell",
+      "tokenAmount": 4215207391713,
+      "txSig": "2CmTsctSYUJxRU91pTszoZKzb6rHKBLPeFNuEGREQiYc4esFTKuHitQXXFNwNuRHhGDFMEDkdxitubMoZRg774z8",
+      "slot": 448281913
+    }
+  ],
+  "preClaim": [
+    {
+      "wallet": "4uejGtgcp3AEaxNVznxavGKWYbsc8WWr1yvVczMDk9VH",
+      "walletIndex": 0,
+      "solBalance": 497000000,
+      "crimeBalance": 545043875532,
+      "fraudBalance": 0
+    },
+    {
+      "wallet": "ErQ5VGLkSR5HodoTzzWsfCJGA1iwHgNecdk1A9xxhcRn",
+      "walletIndex": 1,
+      "solBalance": 450000000,
+      "crimeBalance": 8885491047112,
+      "fraudBalance": 0
+    },
+    {
+      "wallet": "8za7ZRZpRcN3KxKMLtZAgqSawY6gTJtjqCaWafUhtUGv",
+      "walletIndex": 2,
+      "solBalance": 400000000,
+      "crimeBalance": 0,
+      "fraudBalance": 18204448784579
+    },
+    {
+      "wallet": "GZ1bv95QNoe4abdaZwr1EKuAjH3ExEQ5RNzroppHkz1Z",
+      "walletIndex": 3,
+      "solBalance": 460000000,
+      "crimeBalance": 3455354234960,
+      "fraudBalance": 3462736837673
+    },
+    {
+      "wallet": "5W6pK2XfkxjhbZY29RNoYBHxKW8GUYUNvyyJBfQab939",
+      "walletIndex": 4,
+      "solBalance": 471446993,
+      "crimeBalance": 0,
+      "fraudBalance": 4215207391713
+    }
+  ],
+  "curveSnapshots": [
+    {
+      "curve": "CRIME",
+      "tokensSold": 30838197911409,
+      "solRaised": 273000000,
+      "taxCollected": 15960711,
+      "escrowConsolidated": true,
+      "refundPoolLamports": 182555975,
+      "totalOutstandingTokens": 30838197911409,
+      "solVaultBalance": 183446855
+    },
+    {
+      "curve": "FRAUD",
+      "tokensSold": 35684740815060,
+      "solRaised": 320000000,
+      "taxCollected": 18745010,
+      "escrowConsolidated": true,
+      "refundPoolLamports": 213778287,
+      "totalOutstandingTokens": 35684740815060,
+      "solVaultBalance": 214669167
+    }
+  ],
+  "postClaim": [
+    {
+      "wallet": "4uejGtgcp3AEaxNVznxavGKWYbsc8WWr1yvVczMDk9VH",
+      "walletIndex": 0,
+      "solBalance": 500226550,
+      "crimeBalance": 0,
+      "fraudBalance": 0
+    },
+    {
+      "wallet": "ErQ5VGLkSR5HodoTzzWsfCJGA1iwHgNecdk1A9xxhcRn",
+      "walletIndex": 1,
+      "solBalance": 502600333,
+      "crimeBalance": 0,
+      "fraudBalance": 0
+    },
+    {
+      "wallet": "8za7ZRZpRcN3KxKMLtZAgqSawY6gTJtjqCaWafUhtUGv",
+      "walletIndex": 2,
+      "solBalance": 509058263,
+      "crimeBalance": 0,
+      "fraudBalance": 0
+    },
+    {
+      "wallet": "GZ1bv95QNoe4abdaZwr1EKuAjH3ExEQ5RNzroppHkz1Z",
+      "walletIndex": 3,
+      "solBalance": 501199390,
+      "crimeBalance": 0,
+      "fraudBalance": 0
+    },
+    {
+      "wallet": "5W6pK2XfkxjhbZY29RNoYBHxKW8GUYUNvyyJBfQab939",
+      "walletIndex": 4,
+      "solBalance": 496699238,
+      "crimeBalance": 0,
+      "fraudBalance": 0
+    }
+  ],
+  "claimActions": [
+    {
+      "wallet": "4uejGtgcp3AEaxNVznxavGKWYbsc8WWr1yvVczMDk9VH",
+      "walletIndex": 0,
+      "curve": "CRIME",
+      "txSig": "4fw6hJ7KnWVp5rR2xXWtb91J283y8kFbKw3PwNKLWrQge97vfpYfoAaNX8EtVcARUfPyDis73mZTg4NWiV9oNQcp"
+    },
+    {
+      "wallet": "ErQ5VGLkSR5HodoTzzWsfCJGA1iwHgNecdk1A9xxhcRn",
+      "walletIndex": 1,
+      "curve": "CRIME",
+      "txSig": "5c7Rij4DcDc53iLWTKM9F6VBuSgQoE6YBacHr4XcGe5fooW2iLpc8kQSzHEgCKWgBXbxWas5jNCJoKt2JZUNxCH"
+    },
+    {
+      "wallet": "8za7ZRZpRcN3KxKMLtZAgqSawY6gTJtjqCaWafUhtUGv",
+      "walletIndex": 2,
+      "curve": "FRAUD",
+      "txSig": "sxUV9LYVyqFBupHh6EFkgBMuBCAxkE163vsJ6sxuY34Dc5zEFmHxzjhDoG94pYfjzquBmuE93434p8qogxZSzXt"
+    },
+    {
+      "wallet": "GZ1bv95QNoe4abdaZwr1EKuAjH3ExEQ5RNzroppHkz1Z",
+      "walletIndex": 3,
+      "curve": "CRIME",
+      "txSig": "JTVP6txQQQ2RLaoHTi7WEaPuZSwoBVT6e9JGArwoXMJi8H3EqJuBpug369ttRXgzHRya7KVrMhgKzRRBS47KKUH"
+    },
+    {
+      "wallet": "GZ1bv95QNoe4abdaZwr1EKuAjH3ExEQ5RNzroppHkz1Z",
+      "walletIndex": 3,
+      "curve": "FRAUD",
+      "txSig": "31EYPZSA73L9UhnjJ6kyurcLyUyozbzThio9Tsgn33sSWgqaHvSMYMJzJno1VUyu26qqLDoJyVGoiaEv5aTuz2rY"
+    },
+    {
+      "wallet": "5W6pK2XfkxjhbZY29RNoYBHxKW8GUYUNvyyJBfQab939",
+      "walletIndex": 4,
+      "curve": "FRAUD",
+      "txSig": "2zp8xddNa4DW2eVwC2N5ERyaCpnSECyjHvQNBgmLKBoCVSvCCNoKNiCFJyEatdBwGvLCxrkYDamteQo7pAWNkUZQ"
+    }
+  ]
+}

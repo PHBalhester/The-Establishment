@@ -1,0 +1,43 @@
+{
+  "name": "dr-fraudsworth",
+  "version": "0.1.0",
+  "workspaces": [
+    "shared",
+    "app"
+  ],
+  "description": "Dr Fraudsworth's Finance Factory - VRF-driven memecoin/yield farm",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
+    "devnet-vrf": "npx ts-node tests/devnet-vrf.ts",
+    "verify-ids": "tsx scripts/verify-program-ids.ts",
+    "verify-ids:json": "tsx scripts/verify-program-ids.ts --json",
+    "crank": "tsx scripts/crank/crank-runner.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@irys/upload": "^0.0.15",
+    "@irys/upload-solana": "^0.1.8",
+    "@solana/web3.js": "^1.95.5",
+    "@sqds/multisig": "^2.1.4",
+    "@switchboard-xyz/on-demand": "^3.7.3"
+  },
+  "overrides": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@solana/spl-token": "^0.4.9",
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.10.0",
+    "chai": "^4.3.10",
+    "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.3.2"
+  }
+}

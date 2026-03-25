@@ -1,0 +1,9 @@
+[package]
+name = "cross-crate-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dev-dependencies]
+epoch-program = { path = "../../programs/epoch-program", features = ["no-entrypoint"] }
+tax-program = { path = "../../programs/tax-program", features = ["no-entrypoint", "localnet"] }
+anchor-lang = "0.32.1"

@@ -1,0 +1,11 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm run --workspace app build"
+
+[deploy]
+startCommand = "npm run --workspace app start"
+preDeployCommand = "npx tsx app/db/migrate.ts"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

@@ -1,0 +1,127 @@
+# Protocol Guarantees
+
+DeFi has a trust problem. Rug pulls, honeypots, infinite mints, admin backdoors --- the graveyard of abandoned protocols is vast and well-populated. Every new project asks you to trust that the team won't do the things that dozens of teams before them have done.
+
+Dr. Fraudsworth's Fantastical Finance Factory takes a different approach: **don't trust, verify**. Every guarantee listed on this page is enforced by on-chain code. These are not promises. They are mathematical facts.
+
+---
+
+## No Rug Pull
+
+**The concern:** A team drains pool liquidity and disappears with user funds.
+
+**The guarantee:** All liquidity is **protocol-owned**. There are no LP tokens --- none were minted, none exist. The pools have no withdrawal function. There is no code path, no admin instruction, no governance mechanism that can remove liquidity from any pool.
+
+The liquidity deposited at launch remains in the pools permanently. It is not controlled by any wallet. It is controlled by the program, and the program has no instruction to extract it.
+
+---
+
+## No Admin Manipulation of Tax Rates
+
+**The concern:** An admin wallet sets favorable tax rates to benefit insiders.
+
+**The guarantee:** Tax rates are determined exclusively by **Switchboard VRF** randomness generated inside TEE-secured hardware. There is no `set_tax_rate` instruction. There is no admin override. The only way tax rates change is through the VRF-driven epoch transition, which anyone can trigger permissionlessly.
+
+The on-chain anti-reroll protection (binding to a specific randomness account at commit time) prevents anyone from discarding unfavorable results and trying again.
+
+---
+
+## No Admin Access to Funds
+
+**The concern:** A team wallet retains the ability to steal protocol funds.
+
+**The guarantee:** All protocol funds are held in **PDA-controlled accounts** (Program Derived Addresses). PDAs are cryptographic constructs --- no private key exists for them. Only the owning program can sign transactions involving its PDAs, and the programs contain no instructions for arbitrary fund extraction.
+
+The four cross-program PDA gates enforce that:
+- Only the Tax Program can invoke AMM swaps (SwapAuthority PDA)
+- Only the Tax Program can deposit staking rewards (TaxAuthority PDA)
+- Only the Epoch Program can finalize epoch rewards (StakingAuthority PDA)
+- Only the Epoch Program can invoke tax-exempt Carnage swaps (CarnageSigner PDA)
+
+No keypair can produce a valid PDA signature for another program's seeds. This is a cryptographic guarantee, not a policy decision.
+
+---
+
+## Authority Hardening
+
+**The concern:** Upgrade authorities could modify program behavior after launch.
+
+**The guarantee:** The protocol follows a deliberate authority lifecycle:
+
+The protocol follows a phased authority lifecycle:
+
+**At launch**, the deployer wallet holds Update Authority, Whitelist Authority and Metadata Authority directly. This allows immediate reaction to any severe issues in the first 48 hours.
+
+**After 48 hours**, all authorities are transferred to a **2-of-3 multisig** where 2 of the 3 signers use cold wallets. A timelock is applied starting at 2 hours, progressively increasing to 48 hours over the following weeks as the protocol proves stable.
+
+**Mint and Freeze authorities** are burned at launch. No new tokens can ever be created.
+
+**Admin PDAs** (AMM Admin, BC Admin) are burned once their initialization function is complete.
+
+**The end goal** is to fully burn all remaining authorities (Update, Whitelist, Metadata) once the protocol has been externally audited. Until then, the timelocked multisig ensures no single party can make instant changes.
+
+---
+
+## No Honeypot
+
+**The concern:** A token can be bought but not sold. Transfer restrictions trap users.
+
+**The guarantee:** The transfer hooks enforce that tokens can always be transferred to and from **whitelisted protocol-controlled vaults**. The whitelist authority is retained behind a timelocked multisig at launch to allow for necessary updates, and will be burned once the protocol is stable and externally audited.
+
+The validation rule is simple: **either** the source or destination of a transfer must be a whitelisted address. If a vault is on the whitelist at launch, it stays on the whitelist forever. If you can buy a token through a pool, you can sell it back through that same pool.
+
+Direct invocation of the transfer hook is prevented by checking Token-2022's `transferring` flag, which is only set during legitimate `transfer_checked` calls.
+
+---
+
+## No Inflation
+
+**The concern:** A protocol mints additional tokens to fund emissions, diluting existing holders.
+
+**The guarantee:** Token supplies are **fixed at the moment of minting**:
+
+- CRIME: 1,000,000,000 tokens. Mint authority burned. Supply can only **decrease** (via Carnage burns).
+- FRAUD: 1,000,000,000 tokens. Mint authority burned. Supply can only **decrease** (via Carnage burns).
+- PROFIT: 20,000,000 tokens. Mint authority burned. Supply is **permanent**.
+
+There is no emission schedule. There is no inflation mechanism. The rewards paid to PROFIT stakers come from **actual SOL trading fees**, not from printing new tokens.
+
+---
+
+## Financial Safety Guards
+
+Beyond the high-level guarantees, the protocol enforces financial safety at the instruction level:
+
+| Guard | What It Prevents |
+|-------|-----------------|
+| **Sell floor propagation** | User's minimum output is propagated to the AMM CPI, failing early if the swap would not meet slippage requirements after tax |
+| **Protocol minimum output floor** | Rejects swaps where `minimum_output < 50%` of expected output, preventing zero-slippage sandwich attacks |
+| **Pre-transfer vault solvency** | Validates vault has sufficient funds before executing sell payouts |
+| **Staking claim: hard error** | Rejects claims when escrow balance is insufficient (no partial claims that could leave others short) |
+| **Overflow protection** | All arithmetic uses `checked_*` operations --- overflow causes transaction failure, not silent wraparound |
+| **Rent-exempt guards** | Carnage bounty payments skip silently when vault balance would fall below rent-exempt minimum |
+
+---
+
+## Protocol Invariants
+
+These properties hold on every transaction, enforced by constraint checks:
+
+| Invariant | What It Means |
+|-----------|--------------|
+| **AMM constant product** | The product of pool reserves (k) never decreases. Liquidity only grows from fees compounding. |
+| **Tax split integrity** | Every tax payment is split exactly 71% + 24% + 5% = 100%. No rounding leakage --- treasury absorbs remainder. |
+| **Escrow solvency** | The staking escrow always holds enough SOL to cover all pending rewards. Checked after every state-modifying operation. |
+| **Epoch monotonicity** | The epoch number only increases. The protocol cannot revisit a previous epoch or roll back time. |
+| **Whitelist control** | Whitelist authority is held behind a timelocked multisig. After eventual authority burn, the whitelist becomes permanently immutable. |
+| **Dead stake protection** | The staking pool starts with irrecoverable "dead stake" (1 PROFIT), preventing first-depositor inflation attacks. |
+
+---
+
+## What Is NOT Guaranteed
+
+Transparency requires acknowledging what the protocol cannot guarantee:
+
+- **Slippage during Carnage:** The Carnage Fund uses slippage floors (85% atomic, 75% fallback), but large buybacks can still move the price. This is the intended mechanic.
+- **Oracle availability:** If Switchboard oracles go offline, epoch transitions pause until timeout recovery kicks in (~2 minutes). The protocol does not halt permanently --- it recovers.
+- **Token price:** The protocol guarantees mechanical fairness, not financial outcomes. Prices are determined by the market.

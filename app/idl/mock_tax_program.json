@@ -1,0 +1,70 @@
+{
+  "address": "43fZGRtmEsP7ExnJE1dbTbNjaP1ncvVmMPusSeksWGEj",
+  "metadata": {
+    "name": "mock_tax_program",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Mock Tax Program for testing AMM CPI access control"
+  },
+  "instructions": [
+    {
+      "name": "execute_swap",
+      "docs": [
+        "Execute a swap through the AMM via CPI.",
+        "",
+        "This instruction:",
+        "1. Derives the swap_authority PDA from this program",
+        "2. Builds the AMM swap instruction with swap_authority as first account",
+        "3. Calls invoke_signed to sign with the PDA",
+        "",
+        "The caller must provide:",
+        "- amm_program: The AMM program to CPI into",
+        "- swap_authority: The PDA account (verified by this program)",
+        "- All other accounts needed for AMM swap (passed through remaining_accounts)",
+        "- instruction_data: The raw AMM swap instruction data (discriminator + args)",
+        "",
+        "The real Tax Program will calculate taxes and adjust amounts before calling this.",
+        "This mock just passes through to prove the CPI mechanism works."
+      ],
+      "discriminator": [
+        56,
+        182,
+        124,
+        215,
+        155,
+        140,
+        157,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "amm_program",
+          "docs": [
+            "The AMM program to CPI into.",
+            "In production, this should be constrained to the actual AMM program ID."
+          ]
+        },
+        {
+          "name": "swap_authority",
+          "docs": [
+            "The swap_authority PDA owned by this program.",
+            "This account will be signed via invoke_signed."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "instruction_data",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidSwapAuthority",
+      "msg": "Invalid swap_authority PDA"
+    }
+  ]
+}

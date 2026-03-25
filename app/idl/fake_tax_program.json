@@ -1,0 +1,61 @@
+{
+  "address": "7i38TDxugSPSV9ciUNTbnEeBps5C5xiQSSY7kNG65YnJ",
+  "metadata": {
+    "name": "fake_tax_program",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Fake Tax Program for negative testing - same interface, different program ID"
+  },
+  "instructions": [
+    {
+      "name": "execute_swap",
+      "docs": [
+        "Attempt to execute a swap through the AMM via CPI.",
+        "",
+        "This instruction works identically to Mock Tax Program's execute_swap,",
+        "but because this program has a different ID, the swap_authority PDA",
+        "it derives will be different from what AMM expects.",
+        "",
+        "Expected behavior: AMM rejects the CPI because seeds::program mismatch."
+      ],
+      "discriminator": [
+        56,
+        182,
+        124,
+        215,
+        155,
+        140,
+        157,
+        102
+      ],
+      "accounts": [
+        {
+          "name": "amm_program",
+          "docs": [
+            "The AMM program to CPI into."
+          ]
+        },
+        {
+          "name": "swap_authority",
+          "docs": [
+            "The swap_authority PDA owned by this program.",
+            "Note: This PDA is derived from FakeTax's program ID, NOT MockTax's."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "instruction_data",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidSwapAuthority",
+      "msg": "Invalid swap_authority PDA"
+    }
+  ]
+}

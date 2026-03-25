@@ -1,0 +1,19 @@
+[package]
+name = "stub-staking"
+version = "0.1.0"
+description = "Stub Staking Program for testing Epoch Program CPI integration"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang = { version = "0.32.1" }
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]

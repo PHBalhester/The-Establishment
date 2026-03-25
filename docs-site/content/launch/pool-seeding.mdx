@@ -1,0 +1,88 @@
+# Pool Seeding
+
+Once both bonding curves fill their 500 SOL targets, the protocol transitions from fundraising to live trading. This transition --- pool seeding --- creates the liquidity pools, seeds the conversion vault, and activates the epoch system.
+
+The transition is **permissionless**. Anyone can trigger `finalize_transition` once both curves reach `Filled` status. No admin approval. No multisig ceremony. The code checks the conditions and either proceeds or reverts.
+
+---
+
+## The Two SOL Pools
+
+Two constant-product AMM pools are created with protocol-owned liquidity:
+
+| Pool | Token Side | Amount | SOL Side | Amount | LP Fee |
+|------|-----------|--------|----------|--------|--------|
+| CRIME/SOL | CRIME | 290,000,000 | wSOL | 500 SOL | 1% |
+| FRAUD/SOL | FRAUD | 290,000,000 | wSOL | 500 SOL | 1% |
+
+These are the primary trading pools. All buy and sell activity for CRIME and FRAUD against SOL flows through these pools. Every swap is subject to **variable tax rates** that change every epoch --- determined by VRF randomness.
+
+The 1% LP fee compounds directly into pool reserves. There are no external liquidity providers and no LP tokens. The liquidity deepens permanently with every trade.
+
+---
+
+## The Conversion Vault
+
+Instead of PROFIT liquidity pools, the protocol uses a **fixed-rate conversion vault**:
+
+| Asset | Amount in Vault |
+|-------|----------------|
+| CRIME | 250,000,000 |
+| FRAUD | 250,000,000 |
+| PROFIT | 20,000,000 (entire supply) |
+
+The conversion vault provides a deterministic **100:1 conversion rate**: 100 CRIME or 100 FRAUD converts to 1 PROFIT. Conversions also work in reverse: 1 PROFIT converts to 100 CRIME or 100 FRAUD.
+
+**Why a vault instead of AMM pools?** AMM pools with a tiny-supply token (20M PROFIT vs 1B CRIME/FRAUD) create leverage amplification vulnerability --- small trades cause extreme price swings. A fixed-rate vault eliminates this attack surface entirely. The conversion rate is deterministic, predictable, and cannot be manipulated by large orders.
+
+PROFIT is **never sold directly for SOL**. The only way to acquire PROFIT is to convert CRIME or FRAUD tokens through the vault.
+
+---
+
+## PROFIT Token Distribution
+
+The total **PROFIT supply is 20,000,000 tokens**, and 100% is allocated to the conversion vault at seeding:
+
+- No team allocation
+- No vesting schedule
+- No treasury reserve
+- No bonding curve for PROFIT
+
+Every PROFIT token enters circulation through conversion. The only way to acquire PROFIT is to trade CRIME or FRAUD for it at the fixed 100:1 rate.
+
+---
+
+## Symmetric Launch
+
+At the moment of seeding, CRIME and FRAUD are in perfectly identical positions:
+
+- Same amount of tokens in their SOL pools (290M each)
+- Same amount of SOL backing them (500 SOL each)
+- Same amount of tokens in the conversion vault (250M each)
+- Same conversion rate to PROFIT (100:1 for both)
+
+This symmetry means both tokens launch at the **same price against SOL**. The market decides which one diverges first.
+
+---
+
+## Protocol-Owned Liquidity
+
+All liquidity deposited into the pools is **permanently owned by the protocol**.
+
+There are no LP tokens. There is no withdrawal function. There is no governance vote that can drain the pools. The liquidity exists for the lifetime of the protocol.
+
+Note: program upgrade authority is retained behind a time-locked multisig, not burned at launch. This is a deliberate safety net for patching critical bugs post-launch. See [Authority & Governance](/security/authority-governance) for the full details and timeline.
+
+---
+
+## What Happens Next
+
+Once pool seeding completes, the following activates:
+
+1. **Epoch system starts** --- the 30-minute clock begins ticking
+2. **First VRF roll** --- Switchboard generates the first random number to set initial tax rates (genesis defaults: 3% low, 14% high)
+3. **Trading opens** --- users can buy and sell CRIME and FRAUD through the Tax Program
+4. **Carnage Fund begins accumulating** --- 24% of all tax revenue flows to the buyback-and-burn engine
+5. **PROFIT staking activates** --- 71% of all tax revenue flows to PROFIT stakers as SOL game rewards
+
+The tax escrow from the bonding curve sell tax is also distributed to the Carnage Fund, giving it initial capital from day one.

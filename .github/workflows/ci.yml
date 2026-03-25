@@ -1,0 +1,315 @@
+# =============================================================================
+# Dr. Fraudsworth CI Pipeline
+#
+# Runs the full test suite on every push to main:
+#   Job 1 (rust-tests): cargo test --workspace (unit + proptest + LiteSVM)
+#   Job 2 (ts-tests):   anchor test (TypeScript integration via ts-mocha)
+#
+# Why 2 jobs instead of 3?
+#   Both Rust unit tests and LiteSVM integration tests need the same
+#   anchor build artifacts (~15 min). Running them in one job avoids
+#   duplicating that build. The parallelism gain of splitting them
+#   doesn't outweigh the cost of building twice.
+#
+# Tool versions pinned to match local dev environment:
+#   Rust 1.93.0, Solana 3.0.13, Anchor 0.32.1, Node 22
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+env:
+  SOLANA_VERSION: "3.0.13"
+  ANCHOR_VERSION: "0.32.1"
+  PROPTEST_CASES: "256"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Job 1: All Rust tests (unit + proptest + LiteSVM integration)
+  #
+  # Builds all 7 programs individually (3 safe + 4 with --features devnet),
+  # then runs cargo test --workspace --features devnet.
+  #
+  # Why --features devnet?
+  #   4 programs use devnet-specific constants (Switchboard PID, treasury,
+  #   mint addresses): epoch_program, tax_program, conversion_vault,
+  #   bonding_curve. All 7 compile without features (mainnet mode), but
+  #   LiteSVM tests need devnet constants to match test wallets.
+  #
+  # Why --workspace?
+  #   Runs ALL Rust tests: unit tests (#[cfg(test)] in lib.rs),
+  #   proptest (256 iterations), and LiteSVM integration tests
+  #   (programs/*/tests/*.rs that load .so binaries).
+  # ---------------------------------------------------------------------------
+  rust-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      # Free disk space from pre-installed tools we don't need.
+      # The cargo cache is ~10GB uncompressed and swap needs disk too.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo swapoff /swapfile 2>/dev/null || true
+          sudo rm -f /swapfile
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.93.0
+        uses: dtolnay/rust-toolchain@1.93.0
+
+      # Cache cargo registry + target directory.
+      # Key includes Cargo.lock hash so cache busts on dependency changes.
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        id: cache-cargo
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      # Cache Solana CLI binary to avoid re-downloading 200MB tarball.
+      - name: Cache Solana CLI
+        uses: actions/cache@v4
+        id: cache-solana
+        with:
+          path: ~/.local/share/solana/install
+          key: solana-${{ runner.os }}-${{ env.SOLANA_VERSION }}
+
+      - name: Install Solana CLI
+        if: steps.cache-solana.outputs.cache-hit != 'true'
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"
+
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      # Cache Anchor CLI binary to avoid 5-min cargo install.
+      - name: Cache Anchor CLI
+        uses: actions/cache@v4
+        id: cache-anchor
+        with:
+          path: ~/.cargo/bin/anchor
+          key: anchor-${{ runner.os }}-${{ env.ANCHOR_VERSION }}
+
+      # libudev-dev is required by hidapi (transitive dep of anchor-cli).
+      # Only install when we actually need to compile Anchor from source.
+      - name: Install system dependencies for Anchor
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
+      - name: Install Anchor CLI
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v${{ env.ANCHOR_VERSION }} anchor-cli
+
+      # Node.js needed for npm ci (Anchor build uses node for IDL generation).
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Solana CLI requires a keypair to exist (even for local operations).
+      - name: Configure Solana CLI
+        run: |
+          solana config set --url localhost
+          solana-keygen new --no-bip39-passphrase --silent
+
+      # Clean stale .so files from cargo cache. The cache restores
+      # target/deploy/ from previous runs, and anchor build may skip
+      # rebuilding if it thinks nothing changed — leaving .so files
+      # compiled with wrong feature flags (e.g. mainnet treasury instead
+      # of devnet). Force a fresh build every time.
+      - name: Clean stale program binaries
+        run: rm -rf target/deploy/*.so
+
+      # Build programs individually because 3 programs (tax_program,
+      # conversion_vault, bonding_curve) need devnet feature flags for
+      # correct constants (treasury address, Switchboard PID, mint addresses).
+      #
+      # Build order: safe programs first, then devnet-flagged programs.
+      # Build all programs including test programs. LiteSVM integration tests
+      # (test_cpi_access_control.rs) load mock_tax_program.so and
+      # fake_tax_program.so via read_program_bytes(), so they must exist.
+      - name: Build safe programs
+        run: |
+          anchor build -p amm
+          anchor build -p transfer_hook
+          anchor build -p staking
+          anchor build -p fake_tax_program
+          anchor build -p mock_tax_program
+          anchor build -p stub_staking
+
+      - name: Build devnet-flagged programs
+        run: |
+          anchor build -p epoch_program -- --features devnet
+          anchor build -p tax_program -- --features devnet
+          anchor build -p conversion_vault -- --features devnet
+          anchor build -p bonding_curve -- --features devnet
+
+      # Run ALL Rust tests: unit, proptest (256 iterations), LiteSVM integration.
+      - name: Run Rust tests
+        run: cargo test --workspace --features devnet
+
+  # ---------------------------------------------------------------------------
+  # Job 2: TypeScript integration tests via anchor test
+  #
+  # Uses anchor test --skip-build which:
+  #   1. Starts a local solana-test-validator with all programs from Anchor.toml
+  #   2. Runs the [scripts] test command from Anchor.toml
+  #   3. Stops the validator
+  #
+  # The default test script runs: staking.ts + cross-program-integration.ts
+  # These test on-chain behavior via TypeScript against a local validator.
+  # ---------------------------------------------------------------------------
+  ts-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # Free disk space from pre-installed tools we don't need.
+      # The cargo cache is ~10GB uncompressed and swap needs disk too.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo swapoff /swapfile 2>/dev/null || true
+          sudo rm -f /swapfile
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.93.0
+        uses: dtolnay/rust-toolchain@1.93.0
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        id: cache-cargo
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      - name: Cache Solana CLI
+        uses: actions/cache@v4
+        id: cache-solana
+        with:
+          path: ~/.local/share/solana/install
+          key: solana-${{ runner.os }}-${{ env.SOLANA_VERSION }}
+
+      - name: Install Solana CLI
+        if: steps.cache-solana.outputs.cache-hit != 'true'
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v${{ env.SOLANA_VERSION }}/install)"
+
+      - name: Add Solana to PATH
+        run: echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Cache Anchor CLI
+        uses: actions/cache@v4
+        id: cache-anchor
+        with:
+          path: ~/.cargo/bin/anchor
+          key: anchor-${{ runner.os }}-${{ env.ANCHOR_VERSION }}
+
+      - name: Install system dependencies for Anchor
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: sudo apt-get update && sudo apt-get install -y libudev-dev
+
+      - name: Install Anchor CLI
+        if: steps.cache-anchor.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/coral-xyz/anchor --tag v${{ env.ANCHOR_VERSION }} anchor-cli
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # Use the committed devnet wallet as the Solana CLI default keypair.
+      # This must match the upgrade authority passed to --upgradeable-program
+      # AND the Anchor.toml provider wallet (keypairs/devnet-wallet.json).
+      - name: Configure Solana CLI
+        run: |
+          solana config set --url localhost
+          solana config set --keypair keypairs/devnet-wallet.json
+
+      # Clean stale .so files from cargo cache (same reason as rust-tests job).
+      - name: Clean stale program binaries
+        run: rm -rf target/deploy/*.so
+
+      # Build all 10 programs individually (7 production + 3 test).
+      # Staking needs --features test for testDepositAndDistribute instruction
+      # used by staking.ts lifecycle tests.
+      - name: Build safe programs
+        run: |
+          anchor build -p amm
+          anchor build -p transfer_hook
+          anchor build -p staking -- --features test
+          anchor build -p fake_tax_program
+          anchor build -p mock_tax_program
+          anchor build -p stub_staking
+
+      - name: Build devnet-flagged programs
+        run: |
+          anchor build -p epoch_program -- --features devnet
+          anchor build -p tax_program -- --features devnet
+          anchor build -p conversion_vault -- --features devnet
+          anchor build -p bonding_curve -- --features devnet
+
+      # Start test validator manually instead of anchor test --skip-build.
+      # Staking program must be loaded as --upgradeable-program so its
+      # ProgramData account exists (Phase 78 added upgrade authority checks
+      # to initialize_stake_pool). anchor test --skip-build uses --bpf-program
+      # which creates non-upgradeable programs with no ProgramData.
+      - name: Start test validator
+        run: |
+          UPGRADE_AUTH=$(solana-keygen pubkey keypairs/devnet-wallet.json)
+          solana-test-validator \
+            --upgradeable-program 12b3t1cNiAUoYLiWFEnFa4w6qYxVAiqCWU7KZuzLPYtH target/deploy/staking.so $UPGRADE_AUTH \
+            --bpf-program 5JsSAL3kJDUWD4ZveYXYZmgm1eVqueesTZVdAvtZg8cR target/deploy/amm.so \
+            --bpf-program CiQPQrmQh6BPhb9k7dFnsEs5gKPgdrvNKFc5xie5xVGd target/deploy/transfer_hook.so \
+            --bpf-program 4Heqc8QEjJCspHR8y96wgZBnBfbe3Qb8N6JBZMQt9iw2 target/deploy/epoch_program.so \
+            --bpf-program 43fZGRtmEsP7ExnJE1dbTbNjaP1ncvVmMPusSeksWGEj target/deploy/tax_program.so \
+            --bpf-program 5uawA6ehYTu69Ggvm3LSK84qFawPKxbWgfngwj15NRJ target/deploy/conversion_vault.so \
+            --bpf-program DpX3AhSU3BELfBiGbmBMYLPp8VAy3jbEVt6bQjrxUarV target/deploy/bonding_curve.so \
+            --bpf-program 7i38TDxugSPSV9ciUNTbnEeBps5C5xiQSSY7kNG65YnJ target/deploy/fake_tax_program.so \
+            --bpf-program 9irnHg1ddyLeeDTcuXYMa8Zby7uafL5PpkZ7LPfzzNw9 target/deploy/mock_tax_program.so \
+            --bpf-program StUbofRk12S7JrEUoQJFjMe6FmACNoRpbNMyjn311ZU target/deploy/stub_staking.so \
+            --reset --quiet &
+          sleep 5
+          solana airdrop 100 --url localhost
+
+      - name: Run TypeScript tests
+        env:
+          ANCHOR_PROVIDER_URL: http://localhost:8899
+          ANCHOR_WALLET: keypairs/devnet-wallet.json
+        run: npx ts-mocha -p ./tsconfig.json -t 1000000 tests/staking.ts tests/cross-program-integration.ts
+
+      - name: Stop test validator
+        if: always()
+        run: pkill -f solana-test-validator || true

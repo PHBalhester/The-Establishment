@@ -1,0 +1,80 @@
+# Glossary
+
+Key terms and concepts used throughout the Dr. Fraudsworth protocol, listed alphabetically for reference.
+
+---
+
+**Address Lookup Table (ALT)**
+A Solana mechanism that compresses transaction size by referencing frequently-used account addresses via a shorter index. The protocol uses an ALT for complex Carnage transactions (Sell path) that would otherwise exceed the 1,232-byte transaction size limit.
+
+**Arbitrage**
+Exploiting price differences between pools or between the protocol and external markets. In this protocol, arbitrage opportunities arise when tax regime flips create directional friction asymmetry. The 100:1 conversion vault also creates cross-token arbitrage when CRIME and FRAUD prices diverge.
+
+**Bonding Curve**
+The launch mechanism that sells CRIME and FRAUD tokens at an integral-priced linear curve to raise SOL for pool seeding. Each curve sells 460M tokens to raise 1,000 SOL. Both curves must fill within 48 hours or both fail. Supports buy and sell-back (15% sell tax).
+
+**Carnage Fund**
+A protocol-controlled redistribution engine that accumulates 24% of all tax revenue and randomly deploys it to market-buy tokens. Triggers with ~4.3% probability per epoch (roughly twice per day). Three possible actions: BuyOnly (no existing holdings), Burn (~98% of triggered events), or Sell (~2%). Six total execution paths (3 actions x 2 targets).
+
+**Cheap Side**
+The token with low buy tax (1-4%) and high sell tax (11-14%) in the current epoch. Determined by VRF randomness with a 75% flip probability each epoch. The cheap side is the token that arbitrageurs want to buy after a regime flip.
+
+**Commit-Reveal-Consume**
+The three-step VRF flow used for epoch transitions. Commit binds a randomness account, the oracle reveals the random value with a cryptographic proof, and consume reads the result to derive tax rates and Carnage triggers. Prevents front-running and result shopping.
+
+**Constant Product**
+The AMM pricing formula: `k = reserve_a * reserve_b`. After every swap, `k` must not decrease. This mathematically guarantees that pool reserves can never be fully drained and that liquidity deepens as LP fees compound.
+
+**Conversion Vault**
+A fixed-rate exchange mechanism providing 100:1 conversion between CRIME/FRAUD and PROFIT tokens. Replaces traditional AMM pools for PROFIT to eliminate leverage amplification vulnerability. Seeded with 250M CRIME, 250M FRAUD, and 20M PROFIT at launch.
+
+**CPI (Cross-Program Invocation)**
+Solana's mechanism for one program to call another. The protocol's CPI chain reaches Solana's 4-level limit: Epoch -> Tax -> AMM -> Token-2022 -> Transfer Hook.
+
+**Epoch**
+A 30-minute round (~4,500 Solana slots). The protocol's fundamental time unit. At each epoch boundary, new tax rates and Carnage triggers are determined by verifiable randomness. The epoch number only increases --- the protocol cannot go backward.
+
+**Expensive Side**
+The token with high buy tax (11-14%) and low sell tax (1-4%) in the current epoch. The mirror of the cheap side. Selling the expensive side incurs lower friction, creating the directional asymmetry that drives arbitrage.
+
+**LP Fee**
+Liquidity provider fee charged on every AMM swap. 1% on SOL pools. Unlike traditional AMMs, these fees are not paid to external LPs --- they compound directly into pool reserves, permanently deepening liquidity.
+
+**PDA (Program Derived Address)**
+A Solana address derived from a program ID and seeds, with no private key. Only the owning program can sign transactions for its PDAs. The protocol uses PDAs extensively for trustless fund custody --- no human wallet controls protocol assets.
+
+**PROFIT**
+The reward token. 20,000,000 fixed supply, allocated entirely to the conversion vault at launch. Stake PROFIT to earn pro-rata SOL game rewards from trading fees. Cannot be minted or burned. Acquired only through conversion vault (100 CRIME or FRAUD = 1 PROFIT).
+
+**CRIME / FRAUD**
+The two "IP tokens" (Intellectual Property tokens). 1,000,000,000 supply each at launch. Subject to variable epoch-based taxes on SOL pool trades. Supply can only decrease over time via Carnage burns. Built on Token-2022 with transfer hooks.
+
+**Protocol-Owned Liquidity**
+All pool liquidity is owned by the protocol itself. No LP tokens were minted at launch. No withdrawal function exists in the smart contracts. The liquidity is permanent and cannot be removed by any party, including the deployers.
+
+**Soft Peg**
+The price relationship between CRIME and FRAUD, maintained through the conversion vault. Because both IP tokens convert to PROFIT at the same fixed rate (100:1), large price divergences between CRIME and FRAUD create cross-conversion arbitrage opportunities that naturally pull them back toward parity.
+
+**Staking**
+Locking PROFIT tokens in the staking contract to earn pro-rata SOL game rewards from trading fees. 71% of all tax revenue is distributed to stakers proportional to their share of the staking pool. Rewards are paid in SOL, not in additional tokens. Uses a checkpoint pattern to prevent flash-loan exploitation.
+
+**Switchboard VRF**
+Verifiable Random Function provided by the Switchboard On-Demand oracle network. Produces provably fair random numbers on-chain using TEE-secured (Trusted Execution Environment) oracles. Used to determine tax rates, Carnage triggers, and buy targets each epoch.
+
+**Tax Band**
+The range of possible tax rates. Low band: 1-4% (four discrete values). High band: 11-14% (four discrete values). Each token gets independent magnitude rolls --- CRIME and FRAUD can have different exact rates in the same epoch.
+
+**Tax Regime**
+The current configuration of buy and sell taxes across CRIME and FRAUD. One token is designated the cheap side (low buy tax, high sell tax) and the other the expensive side (high buy tax, low sell tax). Reshuffled every epoch via VRF.
+
+**Token-2022**
+Solana's modern token standard (also called Token Extensions). Supports transfer hooks, metadata pointer, and other extensions. All three protocol tokens (CRIME, FRAUD, and PROFIT) use Token-2022 with transfer hooks for whitelist-based transfer validation.
+
+**Transfer Hook**
+On-chain code that executes automatically on every Token-2022 transfer. The protocol's transfer hook verifies that either the source or destination of a transfer is a whitelisted protocol-controlled address. This ensures tokens can always be traded through the pools and prevents unauthorized transfers. Four extra accounts per mint are required for each hooked transfer.
+
+**Treasury**
+Receives 5% of all tax revenue for operational costs. This is the smallest share of the tax split (71% staking, 24% Carnage, 5% treasury).
+
+**Game Rewards**
+SOL rewards earned by PROFIT stakers, funded by 71% of all trading taxes collected on SOL pool swaps. These are real game rewards from actual trading activity --- not token emissions, not inflationary rewards, not promises. Every lamport comes from fees that traders actually paid.

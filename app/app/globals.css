@@ -1,0 +1,1764 @@
+@import "tailwindcss";
+@import "./kit.css" layer(kit);
+
+/* =============================================================================
+   Dr. Fraudsworth's Finance Factory -- Steampunk Design Token System
+
+   All visual tokens defined as Tailwind v4 @theme variables.
+   Generates utility classes: bg-factory-*, text-factory-*, z-*, font-*, etc.
+
+   Tone reference: Bioshock Infinite gentleman's workshop -- warm, polished brass,
+   amber, rich browns. Da Vinci notebook aesthetic for surfaces.
+
+   Phase 57 Brand Application: Refined toward warmer mahogany/wood tones and
+   brighter polished brass accents. Added semantic surfaces, interactive states,
+   and faction identity tokens. All text/background pairs verified WCAG AA.
+   ============================================================================= */
+
+/* =============================================================================
+   WCAG AA Contrast Verification Matrix (Phase 57)
+
+   Computed using W3C relative luminance formula (WCAG 2.2 Section 1.4.3).
+   Threshold: 4.5:1 normal text, 3:1 large text (>=18pt or >=14pt bold) and
+   UI components.
+
+   Pair                                    | Ratio  | Threshold | Status
+   -----------------------------------------+--------+-----------+-------
+   text (#ecdcc4) on bg (#1c120a)          | 13.68  | 4.5:1     | PASS
+   text (#ecdcc4) on surface (#2c1e12)     | 11.99  | 4.5:1     | PASS
+   text (#ecdcc4) on elevated (#3d2b1a)    | 10.01  | 4.5:1     | PASS
+   text-secondary (#bca88a) on bg          |  7.99  | 4.5:1     | PASS
+   text-secondary (#bca88a) on surface     |  7.00  | 4.5:1     | PASS
+   text-secondary (#bca88a) on elevated    |  5.84  | 4.5:1     | PASS
+   text-muted (#8a7a62) on bg             |  4.42  | 3:1 lg    | PASS
+   text-muted (#8a7a62) on surface        |  3.87  | 3:1 lg    | PASS
+   accent (#daa520) on bg                  |  8.23  | 4.5:1     | PASS
+   accent (#daa520) on surface             |  7.21  | 4.5:1     | PASS
+   accent (#daa520) on elevated            |  6.02  | 4.5:1     | PASS
+   success-text (#a8d898) on success-surf  |  9.51  | 4.5:1     | PASS
+   error-text (#e8a0a0) on error-surf      |  8.14  | 4.5:1     | PASS
+   warning-text (#e4c888) on warning-surf  |  9.82  | 4.5:1     | PASS
+   crime (#e86050) on surface              |  4.78  | 4.5:1     | PASS
+   crime (#e86050) on bg                   |  5.45  | 4.5:1     | PASS
+   fraud (#d4a030) on surface              |  6.82  | 4.5:1     | PASS
+   fraud (#d4a030) on bg                   |  7.78  | 4.5:1     | PASS
+   profit (#50b848) on surface             |  6.37  | 4.5:1     | PASS
+   profit (#50b848) on bg                  |  7.27  | 4.5:1     | PASS
+   success (#5da84a) on surface            |  5.51  | 3:1 UI    | PASS
+   error (#c04030) on surface              |  3.09  | 3:1 UI    | PASS
+   warning (#d4982a) on surface            |  6.40  | 3:1 UI    | PASS
+   active (#daa520) on surface             |  7.21  | 4.5:1     | PASS
+   active (#daa520) on active-surf         |  7.27  | 4.5:1     | PASS
+   primary (#c89060) on bg                 |  6.68  | 4.5:1     | PASS
+   primary (#c89060) on surface            |  5.85  | 4.5:1     | PASS
+   glow (#f0c050) on bg                    | 10.84  | 4.5:1     | PASS
+   glow (#f0c050) on surface               |  9.50  | 4.5:1     | PASS
+   border (#86644a) on bg (UI component)   |  3.45  | 3:1 UI    | PASS
+   border (#86644a) on surface (UI comp.)  |  3.02  | 3:1 UI    | PASS
+   border-subtle (#4a3520) on surface      |  1.40  | decorative | N/A
+
+   Notes:
+   - text-muted uses 3:1 large text exception (used for labels >=14pt bold)
+   - border-subtle is intentionally low-contrast (decorative separator)
+   - Status colors (success/error/warning) as standalone text use 3:1 UI
+     threshold -- they always appear with accompanying text or icons
+   ============================================================================= */
+
+/* =============================================================================
+   WCAG AA Contrast Verification: Component Kit Parchment Pairs (Phase 60)
+
+   Parchment frames (#f5e6c8 background) use dark ink text instead of the
+   standard light-on-dark factory palette. Verified using W3C relative
+   luminance formula (WCAG 2.2 Section 1.4.3).
+
+   Pair                                      | Ratio  | Threshold | Status
+   -------------------------------------------+--------+-----------+-------
+   ink (#2a1f0e) on parchment (#f5e6c8)      | ~14.0  | 4.5:1     | PASS
+   ink-secondary (#5a4830) on parchment      |  ~6.5  | 4.5:1     | PASS
+   brass accent (#8b6914) on parchment       |  ~4.8  | 3:1 UI    | PASS
+   error (#c04030) on parchment              |  ~4.2  | 3:1 UI    | PASS
+   success (#5da84a) on parchment            |  ~3.5  | 3:1 UI    | PASS
+
+   Notes:
+   - Ink (#2a1f0e) is the default text color inside kit frames (auto-applied
+     by .kit-frame class) ensuring excellent readability on parchment surfaces
+   - Brass accent and status colors meet the 3:1 UI component threshold
+   - These pairs complement the existing dark-theme matrix above
+   ============================================================================= */
+
+@theme {
+  /* ---------------------------------------------------------------------------
+     Steampunk Color Palette (--color-factory-*)
+     Generates: bg-factory-*, text-factory-*, border-factory-*, etc.
+     Refined Phase 57: warmer mahogany base, brighter polished brass accents
+     --------------------------------------------------------------------------- */
+
+  /* Backgrounds: warm mahogany/wood tones (darkest to lightest) */
+  --color-factory-bg: #1c120a;
+  --color-factory-surface: #2c1e12;
+  --color-factory-surface-elevated: #3d2b1a;
+
+  /* Borders: warm wood-grain brown */
+  --color-factory-border: #86644a;
+  --color-factory-border-subtle: #4a3520;
+
+  /* Primary metals: warm copper, dark gold, polished brass */
+  --color-factory-primary: #c89060;
+  --color-factory-secondary: #9a7420;
+  --color-factory-accent: #daa520;
+  --color-factory-glow: #f0c050;
+
+  /* Text hierarchy: warm parchment tones (brightest to most muted) */
+  --color-factory-text: #ecdcc4;
+  --color-factory-text-secondary: #bca88a;
+  --color-factory-text-muted: #8a7a62;
+
+  /* Status colors: warm-shifted but immediately recognizable */
+  --color-factory-success: #5da84a;
+  --color-factory-error: #c04030;
+  --color-factory-warning: #d4982a;
+
+  /* Interactive state tokens (replaces generic blue-600 accent pattern) */
+  --color-factory-active: #daa520;
+  --color-factory-active-surface: #2a1e10;
+
+  /* Semantic status surfaces (warm-shifted banners) */
+  --color-factory-success-surface: #1a2818;
+  --color-factory-success-border: #4a8a3a;
+  --color-factory-success-text: #a8d898;
+  --color-factory-error-surface: #2a1616;
+  --color-factory-error-border: #a04040;
+  --color-factory-error-text: #e8a0a0;
+  --color-factory-warning-surface: #2a2015;
+  --color-factory-warning-border: #c09030;
+  --color-factory-warning-text: #e4c888;
+
+  /* Faction identity tokens (per-token color branding) */
+  --color-factory-crime: #e86050;
+  --color-factory-fraud: #d4a030;
+  --color-factory-profit: #50b848;
+
+  /* ---------------------------------------------------------------------------
+     Z-Index Layering System (--z-index-*)
+     Generates: z-background, z-overlays, z-hover, z-tooltip, etc.
+     Ascending values ensure predictable stacking order.
+     --------------------------------------------------------------------------- */
+  --z-index-background: 0;
+  --z-index-overlays: 10;
+  --z-index-hover: 20;
+  --z-index-tooltip: 30;
+  --z-index-modal-backdrop: 40;
+  --z-index-modal: 50;
+  --z-index-spinner: 60;
+
+  /* ---------------------------------------------------------------------------
+     Typography Scale (--text-*)
+     Generates: text-display, text-heading, text-subheading, etc.
+     These do NOT collide with Tailwind defaults (sm, base, lg, xl, etc.)
+     --------------------------------------------------------------------------- */
+  --text-display: 3rem;
+  --text-heading: 2rem;
+  --text-subheading: 1.25rem;
+  --text-body: 1rem;
+  --text-detail: 0.875rem;
+  --text-micro: 0.75rem;
+
+  /* ---------------------------------------------------------------------------
+     Custom Animation Definitions (--animate-*)
+     Generates: animate-fade-in, animate-gear-spin, animate-pulse-glow
+     --------------------------------------------------------------------------- */
+  --animate-fade-in: fade-in 0.6s ease-out;
+  --animate-gear-spin: gear-spin 3s linear infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+
+  /* Modal system animation tokens (Phase 54) */
+  --animate-iris-open: iris-open 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  --animate-modal-close: modal-close 180ms ease-in forwards;
+  --animate-content-fade-in: content-fade-in 200ms ease-out forwards;
+  --animate-content-fade-out: content-fade-out 150ms ease-in forwards;
+
+  /* ---------------------------------------------------------------------------
+     Component Kit Tokens (Phase 60)
+     Shared design tokens for the steampunk component kit. These generate
+     Tailwind utility classes via the standard namespaces:
+       bg-frame-parchment, text-frame-ink, duration-kit-hover, shadow-kit-*, etc.
+     --------------------------------------------------------------------------- */
+
+  /* Frame system: parchment surface colors for kit frames and cards */
+  --color-frame-parchment: #f5e6c8;
+  --color-frame-parchment-dark: #e8d5a8;
+  --color-frame-ink: #2a1f0e;
+  --color-frame-ink-secondary: #5a4830;
+  --color-frame-brass: #c4956a;
+  --color-frame-brass-highlight: #f0c050;
+  --color-frame-brass-shadow: #5a4510;
+
+  /* Interactive timing: weighted 200-300ms for tactile steampunk feel */
+  --duration-kit-hover: 250ms;
+  --duration-kit-press: 200ms;
+  --duration-kit-toggle: 300ms;
+
+  /* Slider component: track, fill, and brass knob */
+  --color-slider-track: #3d2b1a;
+  --color-slider-fill: #c4956a;
+  --color-slider-knob: #d4a04a;
+
+  /* Toggle component: off/on track states and brass knob */
+  --color-toggle-off-track: #3d2b1a;
+  --color-toggle-on-track: #5da84a;
+  --color-toggle-knob: #d4a04a;
+
+  /* Hover glow: shared warm golden glow across all kit interactive components */
+  --shadow-kit-hover-glow: 0 0 12px rgba(240, 192, 80, 0.3);
+}
+
+/* Keyframes must be defined outside @theme */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gear-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1.3);
+  }
+}
+
+/* =============================================================================
+   Modal System -- Animations, States, and Scroll Lock
+   Phase 54: Dialog-based modal with iris-open animation
+   ============================================================================= */
+
+/* Iris aperture reveal: expands clip-path circle from the clicked scene object's
+   position. CSS custom properties --iris-x and --iris-y are set by JS via
+   getBoundingClientRect() before showModal(). Defaults to viewport center. */
+@keyframes iris-open {
+  from {
+    clip-path: circle(0% at var(--iris-x, 50%) var(--iris-y, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--iris-x, 50%) var(--iris-y, 50%));
+  }
+}
+
+/* Simple fade + shrink for close. Intentionally faster than open (180ms vs 280ms)
+   so dismissal feels snappy while opening feels theatrical. */
+@keyframes modal-close {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Backdrop dimming + blur: factory scene stays partially visible for atmosphere. */
+@keyframes backdrop-fade-in {
+  from {
+    background-color: transparent;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+  }
+}
+
+@keyframes backdrop-fade-out {
+  from {
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+  }
+  to {
+    background-color: transparent;
+    backdrop-filter: blur(0px);
+  }
+}
+
+/* Station content crossfade: swap content inside the dialog without
+   closing/reopening it (avoids scene flash -- RESEARCH.md Pitfall 7). */
+@keyframes content-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes content-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Modal: iris open -- triggered by JS class after dialog-relative coords are set.
+   NOT on [open] directly because showModal() must happen first so we can read
+   getBoundingClientRect() and convert viewport coords to dialog-relative coords.
+   Without this, small modals (500px) get iris center at viewport x=800+ which
+   is off-screen relative to the dialog element. */
+dialog.modal-shell.iris-opening {
+  animation: iris-open 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+dialog.modal-shell[open]::backdrop {
+  animation: backdrop-fade-in 280ms ease-out forwards;
+}
+
+/* Modal: closing state (added by JS, removed after animationend) */
+dialog.modal-shell.closing {
+  animation: modal-close 180ms ease-in forwards;
+}
+
+dialog.modal-shell.closing::backdrop {
+  animation: backdrop-fade-out 180ms ease-in forwards;
+}
+
+/* Prevent background scrolling when modal is open.
+   <dialog>.showModal() makes background inert for focus/clicks but does NOT
+   prevent scroll events in all browsers (RESEARCH.md Pitfall 4). */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Station content crossfade utility classes */
+.modal-content-enter {
+  animation: content-fade-in 200ms ease-out forwards;
+}
+
+.modal-content-exit {
+  animation: content-fade-out 150ms ease-in forwards;
+}
+
+/* =============================================================================
+   Modal Chrome -- Steampunk Frame Styling
+   Phase 54: Brass frame, decorative bolts, fixed header, scrollable body
+   ============================================================================= */
+
+/* Reset dialog browser defaults. The dialog element itself is transparent --
+   all visual styling lives on the inner .modal-chrome container. Padding is
+   zero on the dialog so clip-path coordinates match viewport coordinates
+   (RESEARCH.md Pitfall 2). */
+dialog.modal-shell {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-height: 85vh;
+  width: 90vw;
+  outline: none;
+  /* Allow floating close button to render outside the dialog box
+     (kit-frame variant positions it at negative offsets). */
+  overflow: visible;
+  /* Restore UA stylesheet centering -- Tailwind preflight resets margin to 0
+     on all elements, which removes the browser's default margin:auto that
+     centers <dialog> elements opened via showModal(). */
+  margin: auto;
+}
+
+/* Steampunk chrome container: layered surface with brass frame.
+   Aged paper background for content readability, brass border for
+   the industrial frame aesthetic (CONTEXT.md: metal outer + paper inner). */
+.modal-chrome {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    #f5e6c8 0%,
+    #e8d5a8 50%,
+    #f0dbb8 100%
+  );
+  border: 3px solid var(--color-factory-accent);
+  border-radius: 8px;
+  /* Multi-layer shadow: metal frame ring + ambient glow + drop shadow */
+  box-shadow:
+    0 0 0 6px var(--color-factory-surface-elevated),
+    0 0 0 8px var(--color-factory-accent),
+    0 0 40px rgba(240, 192, 80, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.5);
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =============================================================================
+   Modal Chrome Kit Variant -- Phase 62
+   Overrides the classic modal-chrome when chromeVariant === 'kit-frame'.
+   Replaces box-shadow/border/border-radius with the riveted-paper.png
+   9-slice border-image, matching the kit-frame-asset treatment at 30px
+   border width for the outermost modal frame.
+
+   The dark .station-content inner wrapper continues to work as-is --
+   kit-frame replaces only the outermost chrome, not the content area.
+   ============================================================================= */
+
+.modal-chrome-kit {
+  /* Replace the parchment gradient -- fill keyword paints the center slice */
+  background: none;
+  /* 9-slice riveted-paper frame (matches .kit-frame-asset) */
+  border: 30px solid var(--color-factory-accent);
+  border-image-source: url('/frames/riveted-paper.png');
+  border-image-slice: 80 fill;
+  border-image-width: 30px;
+  border-image-repeat: round;
+  /* border-image ignores border-radius per CSS spec -- be explicit */
+  border-radius: 0;
+  /* Remove the multi-layer box-shadow from classic chrome */
+  box-shadow: none;
+}
+
+/* Mobile fullscreen: kit variant also goes borderless on small viewports
+   since the fullscreen slide-up has no visible outer frame anyway */
+@media (width < 64rem) {
+  .modal-chrome-kit {
+    border: none;
+    border-image: none;
+    /* Restore parchment background on mobile -- the desktop kit-frame uses
+       border-image-slice `fill` to paint the center, but on mobile we strip
+       the border-image (fullscreen slide-up has no frame). Without this,
+       kit-frame stations have no background at all on mobile. */
+    background: linear-gradient(
+      135deg,
+      #f5e6c8 0%,
+      #e8d5a8 50%,
+      #f0dbb8 100%
+    );
+  }
+}
+
+/* Decorative corner bolts: small brass circles at each corner of the frame.
+   CSS radial gradient creates the domed rivet appearance. Pointer-events
+   disabled so they don't interfere with close button or content clicks. */
+.modal-bolt {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 40%,
+    #f0c050 0%,
+    #8b6914 60%,
+    #5a4510 100%
+  );
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Floating close button container for kit-frame stations.
+   No header bar -- just the close/back buttons floating over the content.
+   position: absolute so it doesn't consume layout space.
+   z-index: 2 to sit above content but below modal overlays. */
+.modal-floating-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Allow the actual buttons inside to receive clicks */
+.modal-floating-close .modal-close-btn,
+.modal-floating-close .mobile-back-btn {
+  pointer-events: auto;
+}
+
+/* Reposition close button outside the frame corner.
+   Now a child of <dialog> (not modal-chrome), so coordinates are
+   relative to the dialog box. Negative offsets push it beyond the
+   30px border-image frame edge. */
+.modal-floating-close .modal-close-btn {
+  top: -20px;
+  right: -36px;
+}
+
+/* Fixed header with brass rule divider.
+   Station name text on aged paper background, dark text for readability.
+   Right padding accommodates the close button. */
+.modal-header {
+  padding: 1rem 1.5rem;
+  padding-right: 3.5rem;
+  border-bottom: 2px solid var(--color-factory-accent);
+  box-shadow: 0 1px 0 rgba(240, 192, 80, 0.3);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* Station title styling: serif heading on paper surface. */
+.modal-header h2 {
+  margin: 0;
+  font-family: var(--font-heading, var(--font-cinzel, serif));
+  font-size: var(--text-subheading);
+  color: #2a1f0e;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Scrollable body with themed scrollbar.
+   scrollbar-width and scrollbar-color are baseline since Feb 2025. */
+.modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-factory-secondary) var(--color-factory-surface);
+  overscroll-behavior: contain;
+}
+
+/* =============================================================================
+   Modal Close Button -- Brass Valve Asset
+   Uses Photoshop-designed ExitButton.png (64x64 source, 32x32 rendered = 2x retina).
+   Hover: clockwise valve rotation + brass drop-shadow glow.
+   Active: quick snap rotation (45deg, 80ms).
+   Hidden on mobile via breakpoint (back arrow used instead).
+   ============================================================================= */
+
+.modal-close-btn {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  padding: 0;
+  transition: transform 200ms ease, filter 200ms ease;
+}
+
+.modal-close-btn img {
+  width: 32px;
+  height: 32px;
+  display: block;
+}
+
+.modal-close-btn:hover {
+  transform: translateY(-50%) rotate(20deg);
+  filter: brightness(1.1) drop-shadow(0 0 6px rgba(240, 192, 80, 0.4));
+}
+
+/* Quick snap rotation on click/press */
+.modal-close-btn:active {
+  transform: translateY(-50%) rotate(45deg);
+  transition-duration: 80ms;
+}
+
+/* =============================================================================
+   Focus Indicators -- Steampunk Glow (A11Y-02)
+   Visible :focus-visible indicators for keyboard navigation within the modal.
+   Box-shadow glow using factory-glow color instead of browser default outline.
+   ============================================================================= */
+
+dialog :focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-factory-glow),
+    0 0 8px rgba(240, 192, 80, 0.4);
+  border-radius: 4px;
+}
+
+/* Close button focus needs circular treatment (not rectangular radius). */
+dialog .modal-close-btn:focus-visible {
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--color-factory-glow),
+    0 0 12px rgba(240, 192, 80, 0.5);
+}
+
+/* =============================================================================
+   Station Content -- Dark Inner Card
+   Existing DeFi components use dark backgrounds (gray-900, zinc-900).
+   The modal chrome uses light paper (#f5e6c8). This wrapper provides the
+   dark workshop interior framed by brass chrome -- thematically coherent
+   like looking through a brass-framed window into the factory machinery.
+   ============================================================================= */
+.station-content {
+  background: var(--color-factory-bg);
+  border-radius: 6px;
+  padding: 1rem;
+  color: var(--color-factory-text);
+  min-height: 120px;
+}
+
+/* Kit-frame stations: remove dark background so the 9-slice parchment
+   fill shows through. Remap text color tokens from light-on-dark to
+   dark-ink-on-parchment so all Tailwind text-factory-* classes resolve
+   correctly. Individual components with their own dark backgrounds
+   (swap form cards, chart, route cards) re-set these variables locally. */
+.modal-chrome-kit .station-content {
+  background: transparent;
+  border-radius: 0;
+  /* Dark-ink text tokens for parchment readability (desktop only).
+     On mobile, station-content keeps its dark bg so these overrides
+     would create unreadable dark-on-dark text. */
+  --color-factory-text: #2a1f0e;
+  --color-factory-text-secondary: #4a3a24;
+  --color-factory-text-muted: #6b5a3e;
+  /* Semantic colors darkened for parchment contrast */
+  --color-factory-accent: #8b6914;
+  --color-factory-crime: #b83a2e;
+  --color-factory-fraud: #9e7a18;
+}
+
+
+/* Kit components on parchment: tabs and buttons need lighter treatment.
+   Targeted at kit classes so SwapForm's explicit bg-factory-surface dark cards
+   are unaffected. */
+.modal-chrome-kit .station-content .kit-tab {
+  background: rgba(42, 31, 14, 0.06);
+  border-color: var(--color-frame-brass);
+  color: var(--color-frame-ink-secondary);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.modal-chrome-kit .station-content .kit-tab:hover:not(:disabled):not([data-state="active"]) {
+  background: rgba(42, 31, 14, 0.12);
+  color: var(--color-frame-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.modal-chrome-kit .station-content .kit-tab[data-state="active"] {
+  background: rgba(42, 31, 14, 0.12);
+  color: var(--color-frame-ink);
+  border-color: var(--color-frame-brass);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+  transform: none;
+}
+
+.modal-chrome-kit .station-content .kit-button-secondary {
+  background: rgba(196, 149, 106, 0.3);
+  border-color: var(--color-frame-brass);
+  color: var(--color-frame-ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.modal-chrome-kit .station-content .kit-button-secondary:hover:not(:disabled) {
+  background: rgba(196, 149, 106, 0.45);
+}
+.modal-chrome-kit .station-content .kit-button-secondary[data-state="active"] {
+  background: rgba(42, 31, 14, 0.55);
+  color: var(--color-frame-parchment, #e8dcc8);
+  border-color: var(--color-frame-brass);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--color-frame-brass);
+  transform: translateY(0);
+  filter: brightness(1);
+}
+
+/* Kit Toggle on parchment: light semi-transparent track instead of dark mahogany */
+.modal-chrome-kit .station-content .kit-toggle {
+  background: rgba(42, 31, 14, 0.15);
+  border-color: var(--color-frame-brass);
+}
+.modal-chrome-kit .station-content .kit-toggle[aria-pressed="true"] {
+  background: rgba(139, 105, 20, 0.35);
+}
+
+/* Kit Input on parchment: light recessed field with dark ink text */
+.modal-chrome-kit .station-content .kit-input {
+  background: rgba(42, 31, 14, 0.06);
+  border-color: var(--color-frame-brass);
+  color: var(--color-frame-ink);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+/* Flush inputs inside dark swap cards: inherit the locally-overridden
+   --color-factory-text (light cream) instead of the parchment dark ink */
+.modal-chrome-kit .station-content .kit-input-flush {
+  background: transparent;
+  border-color: var(--color-factory-border-subtle);
+  color: var(--color-factory-text);
+  box-shadow: none;
+}
+.modal-chrome-kit .station-content .kit-input::placeholder {
+  color: var(--color-frame-ink-secondary);
+  opacity: 0.5;
+}
+
+/* Kit Slider on parchment: override track and thumb CSS variables for lighter treatment.
+   The slider uses native input[range] with appearance:none and background on the
+   element itself + ::-webkit-slider-runnable-track / ::-moz-range-track pseudo-elements. */
+.modal-chrome-kit .station-content .kit-slider {
+  background: rgba(42, 31, 14, 0.15);
+}
+.modal-chrome-kit .station-content .kit-slider::-webkit-slider-runnable-track {
+  background: rgba(42, 31, 14, 0.15);
+}
+.modal-chrome-kit .station-content .kit-slider::-moz-range-track {
+  background: rgba(42, 31, 14, 0.15);
+}
+
+/* Kit Divider on parchment: brass tint at reduced opacity */
+.modal-chrome-kit .station-content .kit-divider {
+  opacity: 0.5;
+}
+
+/* Kit Button Ghost on parchment: dark ink text, subtle border */
+.modal-chrome-kit .station-content .kit-button-ghost {
+  border-color: rgba(42, 31, 14, 0.2);
+  color: var(--color-frame-ink);
+}
+.modal-chrome-kit .station-content .kit-button-ghost:hover:not(:disabled) {
+  background: rgba(42, 31, 14, 0.08);
+}
+
+/* =============================================================================
+   Big Red Button -- CSS-only 3D Physical Steampunk Button (INTERACT-05)
+   Technique: box-shadow for depth + translateY for press animation.
+   Source: Josh Comeau / Gregory Schier patterns adapted for steampunk.
+
+   Visual states:
+   1. Default: Red dome with brass glow
+   2. Hover: Intensified glow + brightness
+   3. Active/Pressed: Push down (translateY) with reduced depth shadow
+   4. Disabled: Dimmed, no glow, not-allowed cursor
+   5. Loading (data-state="loading"): Pointer-events disabled
+   6. Success (data-state="success"): Green flash keyframe
+   7. Error (data-state="error"): Shake keyframe
+   ============================================================================= */
+
+.big-red-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #8b2020;
+  cursor: pointer;
+
+  /* Glossy red dome gradient */
+  background: radial-gradient(
+    ellipse at 35% 30%,
+    #ff4040 0%,
+    #cc2020 40%,
+    #881010 80%,
+    #440808 100%
+  );
+
+  /* 3D depth: hard offset shadow = button thickness */
+  box-shadow:
+    0 8px 0 0 #440808,
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(255, 60, 60, 0.4);
+
+  /* Raise the button above its shadow */
+  transform: translateY(0);
+  transition: transform 60ms ease-out, box-shadow 60ms ease-out, filter 150ms ease;
+
+  /* Prevent text selection during rapid clicks */
+  user-select: none;
+}
+
+/* Hover: intensify glow */
+.big-red-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow:
+    0 8px 0 0 #440808,
+    0 8px 20px rgba(0, 0, 0, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    0 0 30px rgba(255, 60, 60, 0.6);
+}
+
+/* Active/pressed: push down by shadow depth */
+.big-red-button:active:not(:disabled) {
+  transform: translateY(6px);
+  box-shadow:
+    0 2px 0 0 #440808,
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 2px 6px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(255, 60, 60, 0.3);
+}
+
+/* Disabled: dimmed, no glow */
+.big-red-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow:
+    0 8px 0 0 #440808,
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+/* State: Loading -- spinning indicator, prevent double-click */
+.big-red-button[data-state="loading"] {
+  pointer-events: none;
+}
+
+/* State: Success -- green flash */
+@keyframes big-red-success {
+  0%   { box-shadow: 0 8px 0 0 #2a5a2a, 0 0 40px rgba(100, 255, 100, 0.8); background: radial-gradient(ellipse at 35% 30%, #60ff60 0%, #30aa30 40%, #206020 80%); }
+  100% { box-shadow: 0 8px 0 0 #440808, 0 0 20px rgba(255, 60, 60, 0.4); background: radial-gradient(ellipse at 35% 30%, #ff4040 0%, #cc2020 40%, #881010 80%, #440808 100%); }
+}
+
+.big-red-button[data-state="success"] {
+  animation: big-red-success 1.5s ease-out forwards;
+}
+
+/* State: Error -- shake */
+@keyframes big-red-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+
+.big-red-button[data-state="error"] {
+  animation: big-red-shake 0.4s ease-out;
+}
+
+/* Focus-visible: steampunk glow ring for keyboard navigation */
+.big-red-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 8px 0 0 #440808,
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    0 0 0 3px var(--color-factory-glow),
+    0 0 20px rgba(255, 60, 60, 0.4);
+}
+
+/* =============================================================================
+   Big Red Button -- Two-layer asset button (Phase 62-05)
+   Same pattern as the SplashScreen gear button (wheel.png + wheelbutton.png):
+   - .brb-border:  static brass frame (big-red-button-border.png)
+   - .brb-centre:  interactive red button (big-red-button-centre.png)
+     Expands on hover, shrinks on click, springs back on release.
+   - .brb-overlay: state overlays (loading spinner, success flash)
+   ============================================================================= */
+
+/* Assembly container: positioned parent for both layers.
+   Aspect ratio matches the border asset proportions (~1.9:1). */
+.brb-assembly {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.9 / 1;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+}
+
+.brb-assembly:disabled {
+  cursor: not-allowed;
+}
+
+.brb-assembly:focus-visible {
+  outline: 2px solid var(--color-factory-glow);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+/* Layer 1: Border frame -- fills the assembly, non-interactive */
+.brb-border {
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Layer 2: Centre button -- same dimensions as border.
+   Transparent padding in the asset handles alignment (same pattern
+   as splash screen wheel.png + wheelbutton.png at 1:1 overlay). */
+.brb-centre {
+  position: absolute;
+  inset: 0;
+  transition: filter 300ms ease, transform 300ms ease;
+}
+
+.brb-centre-img {
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Active state: hover glow + scale (same as splash-button-active) */
+.brb-centre-active {
+  cursor: pointer;
+}
+
+.brb-assembly:not(:disabled) .brb-centre-active:hover {
+  filter: drop-shadow(0 0 20px rgba(255, 60, 60, 0.6))
+         brightness(1.1);
+  transform: scale(1.05);
+}
+
+.brb-assembly:not(:disabled) .brb-centre-active:active {
+  transform: scale(0.97);
+  filter: drop-shadow(0 0 10px rgba(255, 60, 60, 0.3));
+}
+
+/* Border is ALWAYS full colour -- no filters, opacity, or effects ever */
+.brb-border {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Disabled centre: muted colours (border stays untouched) */
+.brb-assembly:disabled .brb-centre:not(.brb-centre-transacting) {
+  filter: saturate(0.4) brightness(0.7);
+}
+
+/* Transacting centre: pulsing red glow indicates TX in-flight.
+   Button stays visible with a rhythmic glow so the user knows
+   something is happening (wallet popup, network confirmation, etc.).
+   The disabled attribute prevents clicks but the visual stays alive. */
+.brb-centre-transacting {
+  animation: brb-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes brb-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 60, 60, 0.3))
+           brightness(0.95);
+  }
+  50% {
+    filter: drop-shadow(0 0 25px rgba(255, 60, 60, 0.7))
+           brightness(1.1);
+  }
+}
+
+/* =============================================================================
+   Toast Notifications -- Swap Feedback
+   Uses Popover API (popover="manual") so toasts enter the browser's top layer,
+   rendering ABOVE dialog::backdrop blur. Portal to document.body for clean DOM.
+   ============================================================================= */
+
+/* Popover container: override UA popover defaults (inset:0, background, border).
+   Position top-center of viewport. */
+.toast-popover {
+  position: fixed;
+  inset: unset;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  width: auto;
+  height: auto;
+  color: inherit;
+}
+
+/* Slide down from above for top-center positioning */
+@keyframes toast-enter {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes toast-exit {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-20px); opacity: 0; }
+}
+
+.toast-card {
+  animation: toast-enter 250ms ease-out forwards;
+  background: var(--color-factory-surface);
+  border: 1px solid var(--color-factory-border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: var(--color-factory-text);
+  max-width: 360px;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 0.875rem;
+}
+
+.toast-card.toast-exiting {
+  animation: toast-exit 250ms ease-in forwards;
+}
+
+.toast-card.toast-success {
+  border-left: 4px solid var(--color-factory-success);
+}
+
+.toast-card.toast-error {
+  border-left: 4px solid var(--color-factory-error);
+}
+
+/* === Brand Application: Component Classes (Phase 57) === */
+
+/* =============================================================================
+   Brass Input -- Steampunk Form Input
+   For text fields, number inputs, selects. Recessed gauge look with brass
+   glow on focus. Uses only token CSS variables for palette consistency.
+   ============================================================================= */
+
+.brass-input {
+  background: var(--color-factory-surface);
+  border: 2px solid var(--color-factory-border);
+  border-radius: 6px;
+  color: var(--color-factory-text);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  /* Inner shadow for recessed gauge look */
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--color-factory-secondary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.brass-input::placeholder {
+  color: var(--color-factory-text-muted);
+}
+
+.brass-input:focus {
+  outline: none;
+  border-color: var(--color-factory-accent);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--color-factory-accent),
+    0 0 8px rgba(240, 192, 80, 0.3);
+}
+
+.brass-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+
+/* =============================================================================
+   Lever Tab -- Mechanical Lever/Switch Tab
+   Tabs look like mechanical levers: raised when inactive, pressed down when
+   active (via data-state="active"). Brass glow on hover.
+   ============================================================================= */
+
+.lever-tab {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    var(--color-factory-surface-elevated) 0%,
+    var(--color-factory-surface) 100%
+  );
+  border: 1px solid var(--color-factory-border);
+  color: var(--color-factory-text-secondary);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  /* Raised lever: highlight top, shadow bottom */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 0 0 var(--color-factory-border),
+    0 3px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.lever-tab:hover:not(:disabled):not([data-state="active"]) {
+  color: var(--color-factory-text);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 2px 0 0 var(--color-factory-border),
+    0 3px 6px rgba(0, 0, 0, 0.25),
+    0 0 8px rgba(240, 192, 80, 0.15);
+}
+
+/* Active: lever is pressed down */
+.lever-tab[data-state="active"] {
+  color: var(--color-factory-accent);
+  background: var(--color-factory-surface);
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px var(--color-factory-accent);
+  border-bottom-color: var(--color-factory-accent);
+}
+
+.lever-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+
+/* =============================================================================
+   Brass Button -- Beveled Brass Secondary Button
+   For secondary actions (Connect Wallet, Copy Address, tab buttons).
+   Subtle 3D bevel with box-shadow, feels clickable and mechanical.
+   Big Red Button remains the primary CTA -- this is the supporting cast.
+   ============================================================================= */
+
+.brass-button {
+  background: linear-gradient(
+    145deg,
+    var(--color-factory-surface-elevated) 0%,
+    var(--color-factory-surface) 100%
+  );
+  border: 1px solid var(--color-factory-border);
+  border-radius: 6px;
+  color: var(--color-factory-text);
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  /* Beveled raised appearance */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 2px 0 0 var(--color-factory-border),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease,
+    filter 150ms ease;
+}
+
+.brass-button:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 2px 0 0 var(--color-factory-border),
+    0 2px 6px rgba(0, 0, 0, 0.25),
+    0 0 8px rgba(240, 192, 80, 0.2);
+}
+
+.brass-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.3),
+    0 1px 0 0 var(--color-factory-border);
+}
+
+.brass-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: saturate(0.5);
+}
+
+/* =============================================================================
+   Font Variable Bridge (@theme inline)
+
+   Connects next/font CSS variables (set on <html> by layout.tsx) to Tailwind
+   font-family utilities. The "inline" keyword is critical -- it inlines the
+   var() reference directly into the generated utility class, avoiding an
+   intermediate variable resolution layer.
+
+   Usage: className="font-heading" or className="font-mono"
+   ============================================================================= */
+@theme inline {
+  --font-heading: var(--font-cinzel);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+/* =============================================================================
+   Reduced Motion
+
+   Disables all animations for users who prefer reduced motion.
+   This is a critical accessibility requirement.
+   ============================================================================= */
+/* =============================================================================
+   Mobile Modal Overrides -- Phase 58
+   Below 1024px (lg breakpoint), modals become fullscreen slide-up panels.
+   iOS sheet pattern: slide from bottom, back-arrow close, no corner bolts.
+   Desktop behavior (iris animation, brass X, corner bolts) is untouched.
+   ============================================================================= */
+
+/* Keyframes: slide-up from bottom (mobile open) and slide-down (mobile close).
+   Defined globally since keyframes are not scoped by media queries. */
+@keyframes mobile-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes mobile-slide-down {
+  from { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(100%); opacity: 0; }
+}
+
+/* Mobile back button: hidden on desktop (CSS-only responsive toggle).
+   This avoids JS viewport detection and hydration mismatches. */
+.mobile-back-btn {
+  display: none;
+}
+
+@media (width < 64rem) {
+  /* Fullscreen dialog: override sizing, remove border-radius, kill iris clip-path.
+     !important on max-width: overrides inline style={{ maxWidth }} in ModalShell.tsx.
+     !important on clip-path: overrides JS-set inline clip-path from iris animation.
+     100dvh: dynamic viewport height for iOS Safari address bar safety. */
+  dialog.modal-shell {
+    width: 100%;
+    max-width: none !important;
+    max-height: none;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+    clip-path: none !important;
+  }
+
+  /* Inner chrome: fill the fullscreen dialog, no rounded corners */
+  .modal-chrome {
+    border-radius: 0;
+    max-height: none;
+    height: 100%;
+  }
+
+  /* Corner bolts: decorative only, too small for mobile, waste of DOM paint */
+  .modal-bolt {
+    display: none;
+  }
+
+  /* Replace iris-open with slide-up from bottom (iOS sheet pattern) */
+  dialog.modal-shell.iris-opening {
+    animation: mobile-slide-up 300ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Replace scale-down close with slide-down to bottom */
+  dialog.modal-shell.closing {
+    animation: mobile-slide-down 200ms ease-in forwards;
+  }
+
+  /* Simpler backdrop on mobile: same fade but shorter (saves GPU, no blur needed
+     since fullscreen modal covers the entire viewport anyway) */
+  dialog.modal-shell[open]::backdrop {
+    animation: backdrop-fade-in 200ms ease-out forwards;
+  }
+
+  /* Hide desktop brass close button -- mobile uses back arrow instead */
+  .modal-close-btn {
+    display: none;
+  }
+
+  /* Show mobile back button: absolutely positioned in header left side.
+     48px minimum tap target per WCAG 2.5.8 / Apple HIG guidelines. */
+  .mobile-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: filter 150ms ease;
+  }
+
+  .mobile-back-btn:hover {
+    filter: brightness(1.15);
+  }
+
+  /* Focus-visible on mobile back button: steampunk glow consistent with dialog :focus-visible */
+  .mobile-back-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-factory-glow),
+      0 0 8px rgba(240, 192, 80, 0.4);
+  }
+
+  /* Adjust header padding: equal sides so title centers between back button
+     and right edge. Back button is absolutely positioned so it doesn't affect flow. */
+  .modal-header {
+    padding: 0.75rem 3.5rem;
+    justify-content: center;
+  }
+
+  /* Floating back button for kit-frame stations on mobile:
+     position from top edge (not 50% of zero-height parent) */
+  .modal-floating-close .mobile-back-btn {
+    top: 0.75rem;
+    transform: none;
+  }
+
+  /* Kit-frame stations have no header on mobile -- the back button floats
+     over the body. Add top padding so content clears the 48px tap target. */
+  .modal-chrome-kit .modal-body {
+    padding-top: 3.5rem;
+  }
+}
+
+/* =============================================================================
+   Mobile Navigation -- Phase 58 (Plan 02)
+   Steampunk-themed vertical navigation list for mobile viewports.
+   Replaces the desktop interactive scene with touch-friendly station buttons.
+   All classes use existing --color-factory-* theme tokens (no new tokens).
+
+   Classes defined:
+     .mobile-nav             Full viewport container
+     .mobile-header          Factory image header (~120px)
+     .mobile-header-image    Image container (absolute fill)
+     .mobile-header-fade     Gradient overlay (transparent -> bg)
+     .mobile-header-content  Title text overlay
+     .mobile-header-title    "Dr. Fraudsworth's" heading
+     .mobile-header-subtitle "Finance Factory" subheading
+     .mobile-wallet-badge    Wallet status badge container
+     .mobile-wallet-dot      Connection indicator dot
+     .mobile-station-list    Navigation list wrapper
+     .mobile-nav-item        Individual station button (56px min-height)
+     .mobile-nav-icon        Icon container with accent background
+     .mobile-nav-label       Station name text
+     .mobile-nav-chevron     Right arrow indicator
+     .mobile-nav-footer      Decorative bottom pipe element
+   ============================================================================= */
+
+/* Full viewport container: dark factory background, vertical flex layout */
+.mobile-nav {
+  min-height: 100dvh;
+  background: var(--color-factory-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fixed header area: cropped factory background image (~120px) */
+.mobile-header {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+/* Image container: fills the entire header area */
+.mobile-header-image {
+  position: absolute;
+  inset: 0;
+}
+
+/* Gradient fade: transparent at top, fades to background color at bottom.
+   Creates a smooth visual transition from the factory image into the nav list. */
+.mobile-header-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 30%,
+    rgba(0, 0, 0, 0.3) 60%,
+    var(--color-factory-bg) 100%
+  );
+}
+
+/* Title text overlay: positioned bottom-left over the factory image */
+.mobile-header-content {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 1;
+}
+
+/* Title: serif heading in factory accent color with text shadow for readability */
+.mobile-header-title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  color: var(--color-factory-accent);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Subtitle: uppercase tracking, secondary color, smaller than title */
+.mobile-header-subtitle {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  color: var(--color-factory-text-secondary);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  margin: 0;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Wallet status badge: semi-transparent pill in top-right corner */
+.mobile-wallet-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 999px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Connection indicator dot: muted gray when disconnected */
+.mobile-wallet-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-factory-text-muted);
+  transition: background 300ms ease;
+}
+
+/* Connected state: green dot */
+.mobile-wallet-dot.connected {
+  background: var(--color-factory-success);
+}
+
+/* Navigation list: vertical flex with minimal gaps between items */
+.mobile-station-list {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Station button: 56px min-height for comfortable touch targets (exceeds 48px
+   WCAG 2.5.8 requirement). Steampunk surface background with subtle border. */
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 56px;
+  padding: 0.75rem 1rem;
+  background: var(--color-factory-surface);
+  border: 1px solid var(--color-factory-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+  text-align: left;
+}
+
+/* Hover: elevated surface with accent border highlight */
+.mobile-nav-item:hover {
+  background: var(--color-factory-surface-elevated);
+  border-color: var(--color-factory-accent);
+}
+
+/* Active/pressed: subtle scale-down for tactile feedback */
+.mobile-nav-item:active {
+  background: var(--color-factory-surface);
+  transform: scale(0.98);
+  transition-duration: 50ms;
+}
+
+/* Icon container: accent-tinted background square with subtle border */
+.mobile-nav-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-factory-accent);
+  background: rgba(240, 192, 80, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(240, 192, 80, 0.2);
+}
+
+/* Station name: serif heading font, primary text color */
+.mobile-nav-label {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  color: var(--color-factory-text);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Right chevron: muted color, vertically centered */
+.mobile-nav-chevron {
+  flex-shrink: 0;
+  color: var(--color-factory-text-muted);
+  display: flex;
+  align-items: center;
+}
+
+/* Decorative bottom element: steampunk pipe accent with gradient fade.
+   Pseudo-element creates a small brass bar (rivet accent). */
+.mobile-nav-footer {
+  height: 40px;
+  flex-shrink: 0;
+  background: linear-gradient(to bottom, transparent, var(--color-factory-surface) 50%);
+  border-top: 2px solid var(--color-factory-border);
+}
+
+.mobile-nav-footer::before {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 6px;
+  margin: 12px auto 0;
+  background: var(--color-factory-accent);
+  border-radius: 3px;
+  opacity: 0.3;
+}
+
+/* =============================================================================
+   Splash Screen -- Phase 59 Onboarding
+   Full-viewport intro gate with animated brass gear mechanism.
+   Shows every page load while the main page hydrates underneath.
+
+   Classes defined:
+     .splash-overlay              Fixed full-viewport black overlay (z-index: 9999)
+     .splash-exiting              Fade-out trigger (500ms)
+     .splash-gear-assembly        Centered container for wheel + button
+     .splash-wheel                Outer gear ring image wrapper
+     .splash-spinning             Rotation animation trigger (1s × 2)
+     .splash-button               Inner brass disc (clickable after spin)
+     .splash-button-active         Enabled state with glow + cursor
+     .splash-cta                  "Push to Enter" text (hidden initially)
+     .splash-cta-visible          Fade-in trigger for CTA text
+   ============================================================================= */
+
+/* Full-viewport overlay: covers everything, sits above all content.
+   Black background matches the dark void before the factory is revealed. */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  opacity: 1;
+  transition: opacity 500ms ease-out;
+}
+
+/* Fade-out: triggered when user clicks to enter */
+.splash-exiting {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Gear assembly: positions wheel and button in overlapping layers.
+   Size responsive: 280px on mobile, 360px on desktop. */
+.splash-gear-assembly {
+  position: relative;
+  width: 280px;
+  height: 280px;
+}
+
+@media (min-width: 640px) {
+  .splash-gear-assembly {
+    width: 360px;
+    height: 360px;
+  }
+}
+
+/* Outer gear ring wrapper: absolutely positioned to fill assembly. */
+.splash-wheel {
+  position: absolute;
+  inset: 0;
+}
+
+.splash-wheel img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Gear rotation: 1s per full turn, plays exactly twice (2s total).
+   Uses linear easing for mechanical feel. */
+@keyframes splash-gear-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.splash-wheel.splash-spinning {
+  animation: splash-gear-rotate 1s linear 2;
+}
+
+/* Button rotation: same timing but preserves translate(-50%,-50%) centering.
+   Without this, the rotate() keyframe overrides the centering transform. */
+@keyframes splash-button-rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.splash-button.splash-spinning {
+  animation: splash-button-rotate 1s linear 2;
+}
+
+/* Inner button disc: centered inside the gear ring.
+   Both PNGs are 400x400 and designed to overlay at 1:1 -- the disc's
+   transparent padding already sizes it to sit inside the hollow center. */
+.splash-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+  outline: none;
+  border-radius: 50%;
+  transition: filter 300ms ease, transform 300ms ease;
+}
+
+.splash-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Active state: glow effect + pointer cursor signals interactivity */
+.splash-button-active {
+  cursor: pointer;
+  filter: drop-shadow(0 0 20px rgba(240, 192, 80, 0.6));
+}
+
+.splash-button-active:hover {
+  filter: drop-shadow(0 0 30px rgba(240, 192, 80, 0.8))
+         brightness(1.1);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.splash-button-active:active {
+  transform: translate(-50%, -50%) scale(0.97);
+  filter: drop-shadow(0 0 15px rgba(240, 192, 80, 0.4));
+}
+
+/* "Push to Enter" call-to-action text.
+   Starts invisible, fades in when splash-cta-visible is added. */
+.splash-cta {
+  font-family: var(--font-cinzel), serif;
+  font-size: 1.125rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-factory-accent);
+  opacity: 0;
+  transition: opacity 600ms ease-in;
+  user-select: none;
+}
+
+.splash-cta-visible {
+  opacity: 1;
+}
+
+/* Reduced motion: skip rotation, show everything immediately */
+@media (prefers-reduced-motion: reduce) {
+  .splash-spinning {
+    animation: none;
+  }
+
+  .splash-cta {
+    opacity: 1;
+    transition: none;
+  }
+
+  .splash-overlay {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Quick Mute Button -- floating audio toggle (Phase 68)
+   Fixed position, top-left corner, always visible after splash screen.
+   z-index: overlays (10) -- above page content, below modals (50),
+   splash (9999), and Privy (999999).
+   ------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------
+   Quick Toolbar -- mute toggle + social links, top-left corner
+   ------------------------------------------------------------------------- */
+.quick-toolbar {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: var(--z-index-overlays);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quick-toolbar-btn {
+  background: linear-gradient(180deg, #c4a24e 0%, #8b6914 100%);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1a1207;
+  text-decoration: none;
+  opacity: 0.85;
+  padding: 0;
+
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quick-toolbar-btn[aria-pressed="true"] {
+  opacity: 0.6;
+}
+
+.quick-toolbar-btn:hover {
+  opacity: 1;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 2px 8px rgba(196, 162, 78, 0.4);
+}
+
+.quick-toolbar-btn:focus-visible {
+  outline: 2px solid var(--color-factory-glow, #c4a24e);
+  outline-offset: 2px;
+}

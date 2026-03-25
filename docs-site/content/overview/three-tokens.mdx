@@ -1,0 +1,146 @@
+# The Three Tokens
+
+> *"Most projects launch one token and call it a day. I launched three. Because science demands a control group. And also because I am dramatic."*
+
+---
+
+The Fantastical Finance Factory runs on exactly three tokens: **CRIME**, **FRAUD**, and **PROFIT**. Each has a specific role in the system, and none of them work without the other two.
+
+---
+
+## CRIME
+
+| Property | Value |
+|----------|-------|
+| Mint Address | `cRiMEhAxoDhcEuh3Yf7Z2QkXUXUMKbakhcVqmDsqPXc` |
+| Supply | 1,000,000,000 (1 billion) |
+| Token Standard | Token-2022 with transfer hook |
+| Subject to taxes | Yes (SOL pools only) |
+| Can be burned by Carnage | Yes |
+| Pools | CRIME/SOL (taxed) |
+
+CRIME is one of the two "external" tokens, the tokens paired with SOL and subject to the variable tax regime. Each epoch, CRIME is assigned to either the cheap side or the expensive side by the VRF roll.
+
+When CRIME is on the cheap side, it is cheap to buy (1-4% tax) and expensive to sell (11-14% tax). When it is on the expensive side, the reverse applies.
+
+CRIME is deflationary. The Carnage Fund periodically market-buys CRIME and burns the tokens permanently. No new CRIME can ever be minted, the mint authority is burned at launch.
+
+---
+
+## FRAUD
+
+| Property | Value |
+|----------|-------|
+| Mint Address | `FraUdp6YhtVJYPxC2w255yAbpTsPqd8Bfhy9rC56jau5` |
+| Supply | 1,000,000,000 (1 billion) |
+| Token Standard | Token-2022 with transfer hook |
+| Subject to taxes | Yes (SOL pools only) |
+| Can be burned by Carnage | Yes |
+| Pools | FRAUD/SOL (taxed) |
+
+FRAUD is the mirror image of CRIME. Identical supply, identical mechanics, identical relationship to the protocol. When CRIME is on the cheap side, FRAUD is on the expensive side, and vice versa.
+
+Why two identical tokens? Because the **asymmetry between them** is what creates arbitrage. If there were only one token, there would be no peg to break, no spread to capture, and no reason for the arb loop that generates revenue.
+
+CRIME and FRAUD are two sides of the same coin. Literally.
+
+---
+
+## PROFIT
+
+| Property | Value |
+|----------|-------|
+| Mint Address | `pRoFiTj36haRD5sG2Neqib9KoSrtdYMGrM7SEkZetfR` |
+| Supply | 20,000,000 (20 million, fixed forever) |
+| Token Standard | Token-2022 (with transfer hook) |
+| Subject to taxes | No |
+| Can be burned by Carnage | No |
+| Acquisition | Conversion vault (100 CRIME or FRAUD = 1 PROFIT) |
+
+PROFIT is fundamentally different from CRIME and FRAUD.
+
+It is the **reward token**. Stake your PROFIT and you receive SOL rewards, sourced from the 71% of all trading taxes collected by the protocol. The more trading activity, the more rewards.
+
+Like CRIME and FRAUD, PROFIT uses **Token-2022** with a transfer hook. Every PROFIT transfer is validated by the same whitelist program, either the source or destination must be a protocol-controlled address. PROFIT flows through the conversion vault and the staking program, both of which are whitelisted.
+
+### Acquiring PROFIT
+
+PROFIT cannot be purchased directly for SOL. The only way to get it is through the **conversion vault**.
+
+- **100 CRIME = 1 PROFIT**
+- **100 FRAUD = 1 PROFIT**
+
+This means acquiring PROFIT requires first investing in CRIME or FRAUD. The conversion vault is seeded with 250M CRIME, 250M FRAUD, and 20M PROFIT at launch.
+
+---
+
+## Why Three Tokens?
+
+This is the question everyone asks. Here's the answer:
+
+### The Dual External Tokens (CRIME + FRAUD)
+
+You need **two** tokens to create tax asymmetry. The protocol assigns one as cheap and one as expensive each epoch. This asymmetry is what temporarily breaks the soft peg and creates the arb windows that generate revenue.
+
+### The Reward Token (PROFIT)
+
+Why PROFIT? Well... because that's how you make it in Crypto. You do some Crime, you get some Profit. Just ask the devs on PumpFun.
+
+PROFIT serves a dual purpose:
+
+1. **Reward vehicle:** Staking PROFIT rewards you with SOL. This gives participants a reason to hold and stake their PROFIT, which in turn provides stability and depth to the ecosystem.
+
+2. **Conversion sink:** CRIME and FRAUD flow into the conversion vault to acquire PROFIT, removing tokens from circulating supply.
+
+The three-token design creates a self-reinforcing loop where every participant needs the others.
+
+---
+
+## Transfer Restrictions
+
+CRIME, FRAUD and PROFIT all use **Token-2022 with transfer hooks**. Every single transfer of these tokens, without fail, passes through the protocol's Transfer Hook Program for validation.
+
+The rule is simple: **at least one side of every transfer must be a whitelisted address** (a pool vault, the Carnage Fund, the conversion vault or the staking vault).
+
+What this means in practice:
+
+- **No wallet-to-wallet transfers.** You cannot send CRIME, FRAUD, or PROFIT directly to another wallet. Yes this sucks. Yes you will have to get over it.
+- **Everything routes through pools.** Every buy, sell or swap goes through the protocol's approved pools and vaults. Two things are certain in life, remember?
+- **No OTC deals.** As above. Pay your damn taxes.
+- **All activity generates fees.** Since every token movement goes through a pool, every movement contributes to trading volume and taxes.
+
+The whitelist is managed by a whitelist authority that is retained at launch behind a time-locked multisig. This allows the team to add new whitelisted addresses if needed (e.g. for protocol upgrades). The whitelist authority will be burned once the protocol has proven stable and been externally audited, making the whitelist permanently immutable.
+
+> *"Some call these restrictions draconian. I call them 'experimental controls.' A proper scientist does not let the subjects tamper with the apparatus."*
+
+---
+
+## The SOL Pools
+
+All liquidity is protocol-owned and permanent. There are no LP tokens, no LP withdrawal, and no rug-pull vector.
+
+| Pool | LP Fee | Tax | Purpose |
+|------|--------|-----|---------|
+| CRIME/SOL | 1% | Variable (1-14%) | Entry/exit for CRIME |
+| FRAUD/SOL | 1% | Variable (1-14%) | Entry/exit for FRAUD |
+
+SOL pools are where taxes happen. This is where trading friction generates the revenue that funds staking rewards and Carnage. The Tax Program wraps every swap with tax calculation, distribution, and AMM execution in a single atomic transaction.
+
+---
+
+## Summary
+
+| | CRIME | FRAUD | PROFIT |
+|--|-------|-------|--------|
+| Supply | 1B | 1B | 20M |
+| Standard | Token-2022 | Token-2022 | Token-2022 |
+| Transfer hook | Yes | Yes | Yes |
+| Taxed | Yes | Yes | No |
+| Burnable by Carnage | Yes | Yes | No |
+| Earns rewards | No | No | Yes (when staked) |
+| Role | Faction token | Faction token | Reward + conversion sink |
+| Supply trend | Deflationary | Deflationary | Fixed |
+
+Three tokens. Three roles. One closed-loop system.
+
+> *"If you shake a jar full of bees for long enough, they turn into wasps."*

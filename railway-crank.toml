@@ -1,0 +1,8 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "echo 'install complete'"
+
+[deploy]
+startCommand = "npx tsx scripts/crank/crank-runner.ts"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

@@ -1,0 +1,361 @@
+/*
+ * Dr. Fraudsworth's Fantastical Finance Factory
+ * Da Vinci's Workshop Theme
+ *
+ * Aged parchment backgrounds, ornamental borders,
+ * serif typography, sepia tones.
+ */
+
+/* ===== FOUNDATIONS ===== */
+
+:root {
+  /* Parchment palette */
+  --parchment-lightest: #faf6ef;
+  --parchment-light: #f5e6c8;
+  --parchment-mid: #e8d5a8;
+  --parchment-dark: #c4a96a;
+  --parchment-darkest: #8b7441;
+
+  /* Ink palette */
+  --ink-primary: #2c1810;
+  --ink-secondary: #4a3728;
+  --ink-muted: #6b5744;
+  --ink-faint: #8b7b6b;
+
+  /* Accent - aged copper/gold */
+  --accent-copper: #8b5e3c;
+  --accent-gold: #b8860b;
+  --accent-gold-light: #daa520;
+
+  /* Borders */
+  --border-ornate: #c4a06a;
+  --border-subtle: #d4c4a4;
+
+  /* Nextra overrides */
+  --nextra-primary-hue: 33;
+  --nextra-primary-saturation: 50%;
+}
+
+/* ===== GLOBAL TYPOGRAPHY ===== */
+
+body {
+  font-family: 'EB Garamond', 'Georgia', 'Times New Roman', serif !important;
+  background-color: var(--parchment-lightest) !important;
+  color: var(--ink-primary) !important;
+}
+
+/* ===== NEXTRA LAYOUT OVERRIDES ===== */
+
+/* Main background */
+.nextra-body-typesetting-article,
+article,
+main {
+  background-color: var(--parchment-lightest) !important;
+}
+
+/* Sidebar */
+aside nav,
+nav.nextra-sidebar-container,
+.nextra-sidebar-container {
+  background-color: var(--parchment-light) !important;
+  border-right: 2px solid var(--border-ornate) !important;
+}
+
+/* Sidebar links */
+.nextra-sidebar-container a {
+  color: var(--ink-secondary) !important;
+  font-family: 'EB Garamond', serif !important;
+}
+
+.nextra-sidebar-container a:hover {
+  color: var(--accent-copper) !important;
+}
+
+.nextra-sidebar-container a.active,
+.nextra-sidebar-container li.active > a {
+  color: var(--accent-gold) !important;
+  font-weight: 600;
+}
+
+/* Navbar */
+nav.nextra-nav-container,
+.nextra-nav-container {
+  background-color: var(--parchment-light) !important;
+  border-bottom: 2px solid var(--border-ornate) !important;
+  backdrop-filter: none !important;
+}
+
+/* ===== HEADINGS ===== */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cinzel', 'Georgia', serif !important;
+  color: var(--ink-primary) !important;
+}
+
+h1 {
+  font-size: 2.2rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em;
+  padding-bottom: 0.4em;
+  border-bottom: 2px solid var(--border-ornate) !important;
+  margin-bottom: 1.2em !important;
+}
+
+h2 {
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+  color: var(--ink-secondary) !important;
+  margin-top: 2em !important;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+h3 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: var(--accent-copper) !important;
+}
+
+/* ===== BODY TEXT ===== */
+
+article p,
+article li {
+  font-size: 1.08rem;
+  line-height: 1.75;
+  color: var(--ink-secondary);
+}
+
+article a {
+  color: var(--accent-gold) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--parchment-dark);
+  text-underline-offset: 3px;
+}
+
+article a:hover {
+  color: var(--accent-copper) !important;
+  text-decoration-color: var(--accent-copper);
+}
+
+/* ===== ORNAMENTAL HORIZONTAL RULES ===== */
+
+article hr {
+  border: none !important;
+  height: 32px;
+  background: transparent;
+  position: relative;
+  margin: 2.5em 0 !important;
+}
+
+article hr::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--border-ornate),
+    var(--accent-gold),
+    var(--border-ornate),
+    transparent
+  );
+}
+
+article hr::after {
+  content: '\2726';  /* decorative diamond */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--parchment-lightest);
+  padding: 0 12px;
+  color: var(--accent-gold);
+  font-size: 1.2rem;
+}
+
+/* ===== CALLOUT / BLOCKQUOTE - Parchment note style ===== */
+
+article blockquote {
+  background: linear-gradient(135deg, var(--parchment-light), var(--parchment-mid)) !important;
+  border-left: 4px solid var(--accent-gold) !important;
+  border-radius: 4px;
+  padding: 1em 1.5em !important;
+  margin: 1.5em 0 !important;
+  font-style: italic;
+  color: var(--ink-secondary) !important;
+  box-shadow: 2px 2px 8px rgba(139, 116, 65, 0.15);
+}
+
+/* ===== TABLES - Aged ledger style ===== */
+
+article table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+  font-family: 'EB Garamond', serif;
+}
+
+article thead {
+  background: linear-gradient(to bottom, var(--parchment-mid), var(--parchment-light)) !important;
+}
+
+article th {
+  font-family: 'Cinzel', serif !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-primary) !important;
+  border-bottom: 2px solid var(--border-ornate) !important;
+  padding: 0.75em 1em !important;
+}
+
+article td {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  padding: 0.6em 1em !important;
+  color: var(--ink-secondary);
+}
+
+article tr:hover td {
+  background: var(--parchment-light);
+}
+
+/* ===== CODE BLOCKS - Worn notebook style ===== */
+
+article pre {
+  background: #1a1410 !important;
+  border: 1px solid var(--border-ornate) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+article code {
+  font-size: 0.9em;
+}
+
+article :not(pre) > code {
+  background: var(--parchment-light) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 3px;
+  padding: 0.15em 0.35em;
+  color: var(--accent-copper) !important;
+  font-size: 0.88em;
+}
+
+/* ===== DECORATIVE SECTION BORDERS ===== */
+
+/* Ornate top border on content area */
+article {
+  position: relative;
+}
+
+article::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--parchment-dark),
+    var(--accent-gold),
+    var(--parchment-dark),
+    transparent
+  );
+  margin-bottom: 2em;
+}
+
+/* ===== INFO BOXES / NEXTRA CALLOUTS ===== */
+
+.nextra-callout {
+  background: var(--parchment-light) !important;
+  border: 1px solid var(--border-ornate) !important;
+  border-radius: 4px;
+}
+
+/* ===== LISTS ===== */
+
+article ul {
+  list-style-type: disc;
+}
+
+article ul li::marker {
+  color: var(--accent-gold);
+}
+
+article ol li::marker {
+  color: var(--accent-copper);
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+}
+
+/* ===== TOC (right sidebar) ===== */
+
+.nextra-toc {
+  font-family: 'EB Garamond', serif !important;
+}
+
+.nextra-toc a {
+  color: var(--ink-muted) !important;
+}
+
+.nextra-toc a:hover,
+.nextra-toc a.active {
+  color: var(--accent-gold) !important;
+}
+
+/* ===== SCROLLBAR - Subtle parchment ===== */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--parchment-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--parchment-dark);
+  border-radius: 5px;
+  border: 2px solid var(--parchment-light);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-copper);
+}
+
+/* ===== ASCII DIAGRAMS ===== */
+
+.diagram {
+  background: var(--parchment-light);
+  border: 1px solid var(--border-ornate);
+  border-radius: 4px;
+  padding: 1.5em;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-primary);
+  margin: 1.5em 0;
+}
+
+/* ===== SEARCH ===== */
+
+.nextra-search input {
+  background: var(--parchment-light) !important;
+  border: 1px solid var(--border-ornate) !important;
+  font-family: 'EB Garamond', serif !important;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.6rem !important;
+  }
+  h2 {
+    font-size: 1.3rem !important;
+  }
+}

@@ -1,0 +1,65 @@
+# === SECRETS (NEVER COMMIT) ===
+.env
+.env.*
+!.env.example
+keypairs/
+mint-keypairs/
+*.json.burned
+*.json.bak
+stress-keypairs.json
+graduation-state.json
+graduation-state.json.devnet-backup
+
+# === MCP/Claude config (may contain API keys) ===
+.mcp.json
+.claude/settings.local.json
+.claude/agents/
+.claude/projects/
+
+# === Build artifacts ===
+target/
+.anchor/
+node_modules/
+dist/
+.next/
+app/.next/
+
+# === Test artifacts ===
+test-ledger/
+scripts/e2e/*.jsonl
+scripts/e2e/*.log
+.bok/results/
+.bok/worktree/
+
+# === Generated deploy artifacts ===
+scripts/deploy/deploy-log-*.txt
+scripts/deploy/pda-manifest.json
+scripts/deploy/pda-manifest.md
+scripts/deploy/mint-keypairs/
+scripts/deploy/alt-address.json
+scripts/deploy/deployment-report.md
+
+# === OS files ===
+.DS_Store
+*.swp
+Thumbs.db
+
+# === Internal tooling archives ===
+.dbs/
+.dbs-archive/
+
+# === Large assets ===
+WebsiteAssets/
+ci-artifacts/
+
+# === IDE/Editor ===
+.idea/
+.vscode/
+*.code-workspace
+
+# === Dev certificates ===
+app/certificates/
+*.pem
+
+# === Internal tooling archive variants ===
+.dbs-archive-*/

@@ -1,0 +1,130 @@
+import { Callout } from 'nextra/components'
+
+# Epoch Rounds
+
+> *"Time waits for no one. New parameters. New opportunities. New... experiments."*
+
+---
+
+## What Is an Epoch?
+
+An **epoch** is a fixed-length round that serves as the heartbeat of the Fantastical Finance Factory. Each epoch lasts roughly 30 minutes (4,500 Solana slots). Every aspect of the protocol, tax rates, trading incentives, Carnage, it all resets and reconfigures at the beginning of each new epoch.
+
+48 rounds a day. Savvy participants may wish to position themselves accordingly.
+
+---
+
+## The Epoch Lifecycle
+
+<div style={{ textAlign: 'center', margin: '2em 0' }}>
+  <img
+    src="/diagrams/epoch.png"
+    alt="Epoch lifecycle diagram showing the circular flow: epoch boundary reached, crank commits randomness request, VRF oracle reveals randomness inside TEE, new tax rates are set, Carnage may fire, then the cycle repeats"
+    style={{ maxWidth: '100%', borderRadius: '8px' }}
+  />
+  <span style={{ display: 'block', fontSize: '0.85em', opacity: 0.7, marginTop: '0.5em' }}>
+    <em>The epoch lifecycle -- from boundary to new rates and back again</em>
+  </span>
+</div>
+
+Here is what happens during a single epoch transition:
+
+### 1. Epoch Boundary Reached
+
+When enough Solana slots have elapsed since the last epoch started, the next epoch becomes available. Nothing happens automatically though, someone needs to trigger it.
+
+### 2. Commit: Request Randomness
+
+A "crank" (any wallet) sends a transaction that creates a fresh randomness request through Switchboard VRF and locks in which randomness source will be used. This lock-in is critical, it prevents anyone from creating multiple randomness sources and cherry-picking the most favorable result.
+
+The crank earns **0.001 SOL** as a bounty for performing this service.
+
+### 3. Oracle Reveals Randomness
+
+The Switchboard oracle - running inside a Trusted Execution Environment (TEE) - generates the random value and posts it on-chain. This typically takes a few seconds.
+
+### 4. Consume: Apply the Results
+
+A second transaction reads the revealed randomness and derives the new epoch configuration:
+
+- **Which token is the cheap side** (75% chance it flips)
+- **The exact buy and sell tax rates** for both CRIME and FRAUD
+- **Whether Carnage triggers** (~4.3% chance per epoch)
+
+If Carnage does trigger, it executes in the same transaction for MEV protection -- no bot can front-run the Carnage buy.
+
+After this step, the new tax rates are live and trading resumes under the new regime.
+
+---
+
+## Permissionless Cranking
+
+You might be wondering: *who actually triggers all of this?*
+
+Anyone can. The epoch transition is **permissionless**. There is no centralized server, no admin key, no cron job controlled by the team. Any wallet can call the epoch transition, and the protocol incentivizes this with crank bounties.
+
+When you crank an epoch transition, you earn **0.001 SOL** from the Carnage Fund's SOL vault. This means:
+
+- The protocol never depends on the team to keep running.
+- There is always an economic incentive for someone to push the button.
+- If the team disappeared tomorrow, the Fantastical Finance Factory would keep ticking.
+
+The bounty has a safety guard: if the Carnage SOL vault does not have enough balance to cover the bounty plus rent-exempt minimum, the bounty is skipped silently. The transition still advances -- the protocol prioritizes liveness over bounty payment.
+
+---
+
+## Anti-Reroll Protection
+
+When randomness is requested at the commit step, the specific randomness source is locked in. At the consume step, the protocol verifies the exact same source is being used. This means an attacker cannot create dozens of randomness requests, peek at the results, and only reveal the one that gives them favorable tax rates.
+
+You commit to one source of randomness before knowing the outcome.
+
+---
+
+## Epoch Skipping
+
+If the crank is delayed (no one triggers the transition for a while), the protocol skips directly to the correct epoch number. It does not iterate through missed epochs one by one.
+
+This is safe because:
+
+- **Tax rates persist** during gaps -- trading continues with the last-set rates
+- **No double-counted rewards** -- the staking program tracks per-epoch
+- **No implicit Carnage** -- Carnage only triggers from actual VRF results, never from skipped epochs
+- **Direct jump** -- the new epoch is set to the correct number, not incremented through each missed one
+
+---
+
+## VRF Timeout Recovery
+
+Occasionally, an oracle may fail to reveal randomness. The protocol handles this with a timeout mechanism: after roughly 2 minutes of waiting, the crank can create a fresh randomness request (which gets assigned to a potentially different, working oracle) and retry. This ensures the protocol cannot get permanently stuck waiting for a failed oracle.
+
+---
+
+## Why This Matters
+
+Most protocols are static. You deposit, you wait, you collect. The Fantastical Finance Factory is a **living system**. Every 30 minutes, the landscape changes:
+
+- Tax rates shift, creating directional advantages.
+- The cheap side may flip, rewarding anyone that anticipated the change.
+- Carnage may strike, injecting chaos and opportunity in equal measure.
+
+This is not passive finance. It is active, adversarial and endlessly dynamic. 48 rounds a day, each one different from the last.
+
+The experiment never sleeps.
+
+---
+
+## Timing Reference
+
+| Parameter | Value |
+|-----------|-------|
+| Epoch duration (mainnet) | ~30 minutes (4,500 slots) |
+| Epochs per day (mainnet) | ~48 |
+| Crank bounty | 0.001 SOL |
+| VRF timeout | ~2 minutes (300 slots) |
+| Carnage lock window | ~20 seconds (50 slots) |
+| Carnage execution deadline | ~2 minutes (300 slots) |
+
+<Callout type="info">
+Epoch timing is based on Solana slot progression at roughly 400ms per slot. Actual durations may vary slightly depending on network conditions.
+</Callout>

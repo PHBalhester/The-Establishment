@@ -1,0 +1,142 @@
+# How It All Works
+
+> *"In my experience, the line between genius and insanity is mostly just avoidable paperwork."*
+
+---
+
+## The Full System Loop
+
+Everything in the Fantastical Finance Factory connects back to everything else. Taxes fund staking rewards and Carnage. Carnage creates chaos. Chaos creates arbitrage. Arbitrage generates taxes. And repeat.
+
+Here's the entire system in one picture:
+
+<div style={{ textAlign: 'center', margin: '2em 0' }}>
+  <img
+    src="/diagrams/howitallworks.png"
+    alt="Token flow diagram showing the complete system loop: VRF rolls new tax rates, creating price dislocations that arbitrageurs trade to restore, generating SOL taxes split 71% to staking rewards, 24% to Carnage Fund, and 5% to treasury, with Carnage buyback-and-burn events creating further dislocations"
+    style={{ maxWidth: '100%', borderRadius: '8px' }}
+  />
+  <span style={{ display: 'block', fontSize: '0.85em', opacity: 0.7, marginTop: '0.5em' }}>
+    <em>The complete system loop -- tax flips drive arbitrage, taxes fund rewards and Carnage, burns create more arbitrage</em>
+  </span>
+</div>
+
+Now let's walk through each step.
+
+---
+
+## Step 1: VRF Rolls New Tax Rates
+
+Every 30 minute epoch, a new round begins. The protocol requests a random number from [Switchboard VRF](https://switchboard.xyz/). From that single 32-byte random value, eight bytes determine the epoch's configuration:
+
+| Byte(s) | Purpose | Range |
+|---------|---------|-------|
+| 0 | Flip decision | Less than 192 = flip cheap side (75% probability) |
+| 1 | CRIME low rate | 1%, 2%, 3%, or 4% |
+| 2 | CRIME high rate | 11%, 12%, 13%, or 14% |
+| 3 | FRAUD low rate | 1%, 2%, 3%, or 4% |
+| 4 | FRAUD high rate | 11%, 12%, 13%, or 14% |
+| 5 | Carnage trigger check | Less than 11 = Carnage fires (~4.3% chance) |
+| 6 | Carnage action | Less than 5 = Sell, 5+ = Burn |
+| 7 | Carnage target | Less than 128 = CRIME, 128+ = FRAUD |
+
+The cheap side token becomes cheap to buy and expensive to sell. The expensive side gets mirrored; expensive to buy, cheap to sell. Each token gets independently rolled rates, CRIME and FRAUD can have different low/high rates in the same epoch.
+
+For example: CRIME could have a cheap to buy tax rate of 2% and an expensive to sell tax rate of 14%. FRAUD could, at the same time, have an expensive to buy tax rate of 12% and a cheap to sell tax rate of 1%.
+
+---
+
+## Step 2: Tax Asymmetry Breaks the Soft Peg
+
+CRIME and FRAUD are softly pegged to each other through their shared relationship with PROFIT. If both tokens had matching taxes, the peg would hold steady.
+
+But because the tax regime assigns one token as cheap and one as expensive, it creates directional friction. It suddenly costs more to move value through one side than the other. The prices begin to drift apart.
+
+This dislocation is the fuel that powers the entire system.
+
+---
+
+## Step 3: Arbitrageurs Restore the Peg
+
+Where there is price discrepancy, there are arbitrageurs.
+
+An example arb route:
+
+1. **Buy** CRIME with SOL (low buy tax, 1-4%)
+2. **Swap** through the PROFIT vault into FRAUD
+3. **Sell** FRAUD into SOL (low sell tax, 1-4%)
+4. **Easy money.**
+
+Traders race to capture this spread. In doing so, they push prices back toward equilibrium. Until the next epoch.
+
+---
+
+## Step 4: Taxes Fund Rewards, Carnage, and Treasury
+
+Every SOL collected as tax is split automatically on-chain:
+
+| Destination | Share | Purpose |
+|-------------|-------|---------|
+| **PROFIT Stakers** | 71% | SOL rewards, claimable anytime |
+| **Carnage Fund** | 24% | Accumulates for buyback-and-burn events |
+| **Treasury** | 5% | Crank bounties and operational costs |
+
+This split is hardcoded in the Tax Program. It happens on every single taxed swap. No batching, no delays, no human involvement.
+
+For micro-taxes below 4 lamports, the full amount goes to staking to avoid dust distribution across three destinations.
+
+---
+
+## Step 5: Carnage Randomly Detonates
+
+The Carnage Fund sits there, quietly accumulating SOL. Then, with roughly a 4.3% chance per epoch (once a day on average), it detonates.
+
+When it triggers the Carnage Fund does the following:
+
+1. **Burns** any tokens it currently holds (98% probability -- don't ask about the other 2%. You DON'T want to know).
+2. **Market-buys** CRIME or FRAUD with accumulated SOL (up to 1,000 SOL per trigger)
+
+These are not small trades. A well timed Carnage event could inject hundreds of SOL of buy pressure into a single pool in one transaction. The price spikes. The peg breaks. Arb windows wide open. Volume galore.
+
+And the tokens that were burned? Never to be seen again.
+
+---
+
+## Step 6: Burns Create More Arb, and the Loop Continues
+
+The sudden buying pressure from Carnage pushes one token's price up sharply relative to the other. This is exactly the same kind of dislocation that tax flips create, except bigger and less predictable.
+
+Arbitrageurs move in, trading to restore the peg. Those trades generate taxes. Those taxes fund more rewards and more Carnage. The fund refills.
+
+---
+
+## The Complete Lifecycle
+
+The epoch transition follows a precise three-transaction flow:
+
+1. **Transaction 1:** Create randomness account (Switchboard SDK)
+2. **Transaction 2:** Commit randomness + trigger epoch transition (bundled)
+3. *~3 slots pass while the oracle reveals inside the TEE*
+4. **Transaction 3:** Reveal randomness + consume it + execute Carnage atomically (bundled)
+
+Anyone can crank these transactions -- they are fully permissionless. The crank operator earns a small bounty (0.001 SOL) from the Carnage SOL vault for triggering the transition. If the team disappeared tomorrow, the protocol would keep running as long as someone submits the transactions.
+
+---
+
+## And Then It Starts All Over Again
+
+48 times a day on mainnet. Every epoch. Forever.
+
+No admin keys required. No pause button. No human in the loop. Just math, randomness, and traders doing what traders do.
+
+The protocol is a perpetual motion machine powered by human greed.
+
+> *"I considered naming it the Infinite Financial Engine, but my lawyers said that was 'legally inadvisable.' So I called it a 'Fantastical Finance Factory' instead. Same thing, really."*
+
+---
+
+## Next Steps
+
+- Learn about [The Three Tokens](/overview/three-tokens) and why there are exactly three
+- Understand [The Tax System](/gameplay/tax-regime) in detail
+- See how [The Carnage Fund](/gameplay/carnage-fund) works under the hood

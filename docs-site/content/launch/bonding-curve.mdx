@@ -1,0 +1,132 @@
+# The Bonding Curve
+
+> *"The experiment begins not with a bang, but with a curve. A mathematically pristine, integral-derived, dual-coupled curve. Two of them, actually."*
+
+## How It Works
+
+The protocol launches through a **dual bonding curve** --- one for CRIME, one for FRAUD --- running simultaneously. Each curve sells **460,000,000 tokens** (46% of that token's total supply) along a **linear price curve**, raising **500 SOL** per curve (1,000 SOL total).
+
+| Parameter | Value |
+|-----------|-------|
+| Tokens for sale | 460M per curve |
+| SOL target | 500 SOL per curve |
+| Start price | 0.00000045 SOL/token |
+| End price | 0.000001725 SOL/token |
+| Price increase | ~3.83x from start to end |
+| Per-wallet cap | 20M tokens (2% of supply) |
+| Minimum purchase | 0.05 SOL |
+| Deadline | 48 hours |
+| Starting FDV | ~$45,000 (at $100/SOL) |
+| Ending FDV | ~$172,500 (at $100/SOL) |
+
+The price rises linearly as tokens are purchased. Early buyers get a better price, but the curve is shallow enough that nobody is priced out by being a few minutes late.
+
+---
+
+## The Pricing Formula
+
+The curve follows a linear price function: the price at any point depends on how many tokens have already been sold. The total SOL cost of a purchase is the **integral** (area under the curve) between the current position and the new position.
+
+For a linear curve `P(x) = a + bx`, buying `dx` tokens starting from position `x1` costs:
+
+- **SOL = a * dx + b * (2*x1 + dx) * dx / 2**
+
+This is a quadratic equation in `dx`. Given a SOL amount, the protocol solves for tokens out using the quadratic formula with floor rounding (protocol-favored).
+
+**Why integral pricing matters:** A naive approach would multiply the current price by the purchase amount. But on a curve, the price changes as you buy. The integral captures the *true* cost across the entire price range your purchase spans. This is the same mathematics that underlies every bonding curve in DeFi --- the area under the curve equals the SOL cost.
+
+**Rounding:** The protocol uses floor rounding on token output (you get slightly fewer tokens than the exact mathematical answer). This favors the protocol by a fraction of a base unit per purchase.
+
+---
+
+## Selling Back to the Curve
+
+You can sell tokens back to the curve while it is still in the **Active** state. Selling walks the curve backward: `tokens_sold` decreases, and the price drops for the next buyer.
+
+The SOL returned is computed using the same integral, applied in reverse:
+
+- **SOL_gross = N * (a + b * (x1 + x2) / 2)**
+
+Where `x1` is the current `tokens_sold` and `x2 = x1 - N` (the new position after selling `N` tokens).
+
+**There is a 15% sell tax** deducted from the SOL output (not from the token count). The tax is held in a per-curve escrow PDA:
+
+- On graduation, escrow funds are distributed to the Carnage Fund
+- On failure, escrow funds are consolidated back into the SOL vault for refunds
+
+**Sells are disabled** once the curve reaches `Filled` status. This prevents grief attacks at the finish line.
+
+---
+
+## Dual-Curve Coupling
+
+This is the critical design constraint: **both curves must fill for either to succeed**.
+
+CRIME and FRAUD launch together or not at all. If only one token filled successfully, the dual-token mechanics (tax regime flips, Carnage targeting, conversion vault) would not function. The protocol demands symmetry.
+
+The coupling is enforced through the graduation process:
+
+1. Each curve tracks its own `tokens_sold` independently
+2. When a curve reaches 460M tokens sold, its status transitions to `Filled`
+3. `Filled` is not the end --- it is a waiting state
+4. Only when **both** curves are `Filled` can `finalize_transition` execute
+5. `finalize_transition` moves both curves to `Graduated` and triggers pool seeding
+
+If one curve fills but the other fails (deadline passes), both curves become refund-eligible.
+
+---
+
+## The 48-Hour Deadline
+
+Both curves have a **48-hour deadline** from the moment they are started (~432,000 Solana slots at 400ms per slot). Two outcomes are possible:
+
+**Both fill within 48 hours:** The protocol transitions to pool seeding. Launch proceeds.
+
+**Either curve fails to fill:** Both curves are cancelled. Every participant can claim a full SOL refund, regardless of which curve they participated in. This is the atomic guarantee.
+
+> *"The Doctor does not offer refunds... unless the experiment fails entirely. Then he is quite generous."*
+
+---
+
+## Refund Flow
+
+If the launch fails, participants can reclaim their SOL through a **burn-and-claim** mechanism:
+
+1. **`consolidate_for_refund`** --- merges the sell tax escrow back into the SOL vault (so sellers' tax is included in the refund pool)
+2. **`claim_refund`** --- the user burns their curve-purchased tokens and receives proportional SOL from the vault
+
+The refund is proportional: if you hold `N` tokens and the vault contains `V` SOL, you receive `N / total_tokens_in_circulation * V`. This ensures fairness even if some participants sold back before the deadline.
+
+**Partner mint validation** (FIN-05): The refund instruction validates that the partner curve's token mint matches the stored `partner_mint` in CurveState. This prevents an attacker from substituting a fake partner curve to manipulate refund eligibility.
+
+---
+
+## Per-Wallet Cap
+
+Each wallet is limited to purchasing **20,000,000 tokens** (2% of supply per curve). This is enforced at the smart contract level by reading the user's token account balance.
+
+Selling tokens frees cap space --- but the 15% sell tax makes cap recycling unprofitable for wash trading.
+
+The Transfer Hook whitelist prevents wallet-to-wallet transfers during the curve phase. Only protocol-controlled PDAs (whitelisted pool vaults) can be transfer destinations. Users cannot shuffle tokens to a new wallet to circumvent the cap.
+
+---
+
+## Zero-Gap Transition
+
+The bonding curve's **end price** is mathematically constrained to match the **pool seeding price**:
+
+- **Pool price = 500 SOL / 290,000,000 tokens = 0.000001724 SOL/token**
+- **Curve end price = P_END = 0.000001725 SOL/token**
+
+When the curves complete and pools are created, there is zero arbitrage gap between the last curve purchase and the first pool trade. Curve participants are not exposed to an instant dump scenario.
+
+---
+
+## Tax During the Bonding Curve
+
+The 15% sell tax collected during the curve phase is not wasted. It is held in per-curve escrow PDAs and distributed after graduation:
+
+- **On success:** Escrow SOL flows to the Carnage Fund, seeding the buyback-and-burn engine from day one
+- **On failure:** Escrow SOL is consolidated back into the refund pool, ensuring sellers are made whole
+
+This means even pre-launch trading activity contributes to the protocol's redistribution mechanics.

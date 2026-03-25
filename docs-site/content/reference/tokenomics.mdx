@@ -1,0 +1,154 @@
+# Tokenomics
+
+A complete reference of token supplies, allocations, pool parameters, fee structures, and launch configuration for Dr. Fraudsworth's Fantastical Finance Factory.
+
+---
+
+## Token Supplies
+
+| Token | Total Supply | Standard | Can Change? | How |
+|-------|-------------|----------|-------------|-----|
+| CRIME | 1,000,000,000 | Token-2022 (with transfer hook) | Decreases only | Carnage burns |
+| FRAUD | 1,000,000,000 | Token-2022 (with transfer hook) | Decreases only | Carnage burns |
+| PROFIT | 20,000,000 | Token-2022 (with transfer hook) | No | Fixed forever |
+
+All mint authorities are burned at launch. No new tokens can ever be created for any of the three tokens. All three mints include the MetadataPointer extension for on-chain metadata.
+
+All three tokens use **Token-2022** with transfer hooks for whitelist-based transfer validation. Every transfer must have either the source or destination be a whitelisted protocol-controlled address.
+
+---
+
+## Token Allocations
+
+Allocation breakdown for each IP token (CRIME and FRAUD individually):
+
+| Allocation | Amount | % of Supply | Destination |
+|-----------|--------|-------------|-------------|
+| Bonding Curve Sale | 460,000,000 | 46% | Sold to participants via price curve |
+| SOL Pool Liquidity | 290,000,000 | 29% | Protocol-owned AMM pool |
+| Conversion Vault | 250,000,000 | 25% | Fixed-rate 100:1 exchange |
+
+There is no team allocation, no advisor allocation, no treasury reserve, and no vesting schedule. 100% of supply is distributed at launch --- 46% to curve participants and 54% into protocol-owned infrastructure.
+
+---
+
+## Pool Seeding
+
+The two SOL pools created at launch with their initial reserves:
+
+| Pool | Token Side | Amount | SOL Side | Amount |
+|------|-----------|--------|----------|--------|
+| CRIME/SOL | CRIME | 290M | wSOL | 500 SOL |
+| FRAUD/SOL | FRAUD | 290M | wSOL | 500 SOL |
+
+All pool liquidity is protocol-owned and permanent. No LP tokens exist. Liquidity cannot be withdrawn.
+
+**Conversion Vault seeding:**
+
+| Asset | Amount | Purpose |
+|-------|--------|---------|
+| CRIME | 250M | Available for PROFIT conversion |
+| FRAUD | 250M | Available for PROFIT conversion |
+| PROFIT | 20M (entire supply) | Distributed via 100:1 conversion |
+
+---
+
+## Fee Structure
+
+| Pool Type | LP Fee | Tax | Tax Determined By |
+|-----------|--------|-----|-------------------|
+| SOL Pools (CRIME/SOL, FRAUD/SOL) | 1% | Variable (1-14%) | VRF each epoch |
+| Conversion Vault | None | None | N/A (fixed rate) |
+
+LP fees compound into pool liquidity, permanently increasing the depth of each pool. Tax rates on SOL pools are set by VRF each epoch and differ between buy and sell directions, between CRIME and FRAUD, and between cheap and expensive sides.
+
+---
+
+## Tax Revenue Distribution
+
+All tax revenue collected from SOL pool trades is split as follows:
+
+| Destination | Share | Purpose |
+|-------------|-------|---------|
+| PROFIT Stakers | 71% | SOL rewards for stakers |
+| Carnage Fund | 24% | Buyback and burn engine |
+| Treasury | 5% | Operational costs |
+
+This split is enforced on-chain and cannot be modified. The treasury receives the remainder after staking (floor) and Carnage (floor) are computed, ensuring every lamport is accounted for with zero leakage.
+
+---
+
+## Tax Rate Ranges
+
+| Direction | Minimum | Maximum | Band |
+|-----------|---------|---------|------|
+| Cheap side buy tax | 1% | 4% | Low (4 discrete values) |
+| Cheap side sell tax | 11% | 14% | High (4 discrete values) |
+| Expensive side buy tax | 11% | 14% | High (4 discrete values) |
+| Expensive side sell tax | 1% | 4% | Low (4 discrete values) |
+
+Each token gets independent magnitude rolls. CRIME and FRAUD can have different exact rates in the same epoch. The cheap side flips with 75% probability each epoch.
+
+**Round-trip costs (buy then sell same token):**
+
+| Scenario | Buy Tax | Sell Tax | Round-Trip |
+|----------|---------|----------|------------|
+| Buy cheap, sell cheap (no flip) | 1-4% | 11-14% | 12-18% |
+| Buy cheap, sell expensive (flip) | 1-4% | 1-4% | 2-8% |
+| Buy expensive, sell expensive (no flip) | 11-14% | 1-4% | 12-18% |
+| Buy expensive, sell cheap (flip) | 11-14% | 11-14% | 22-28% |
+
+---
+
+## Carnage Fund Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Trigger chance | ~4.3% per epoch (~11/256) |
+| Expected frequency | ~2x per day |
+| Burn probability | ~98% of triggered actions |
+| Sell probability | ~2% of triggered actions |
+| Atomic slippage floor | 85% of expected output |
+| Fallback slippage floor | 75% of expected output |
+| Atomic lock window | 50 slots (~20 seconds) |
+| Execution deadline | 300 slots (~2 minutes) |
+
+When Carnage triggers, it uses accumulated SOL to market-buy one of the IP tokens (selected by VRF). With ~98% probability, the purchased tokens are **burned permanently**, reducing supply. With ~2% probability, they are sold back into the other pool --- injecting chaos from both directions.
+
+The Carnage Fund executes across **6 paths** (3 actions x 2 targets). The Sell path is the most complex, requiring an Address Lookup Table for the transaction due to the high account count (23 named accounts + 8 remaining accounts for dual transfer hooks).
+
+---
+
+## Rewards Model
+
+The rewards paid to PROFIT stakers are **real rewards** from actual trading activity:
+
+- **0.71 SOL** to staking escrow (71%)
+- **0.24 SOL** to Carnage Fund vault (24%)
+- **0.05 SOL** to treasury (5%)
+
+There is no token emission. No inflation. No external subsidy. Every lamport of rewards comes from fees that traders actually paid. The only variable is trading volume.
+
+**Staking mechanics:**
+- Stake PROFIT to earn pro-rata SOL rewards
+- Rewards accumulate per-epoch (finalized by `update_cumulative` CPI from Epoch Program)
+- Checkpoint pattern prevents flash-loan exploitation (stakers only earn from future epochs)
+- Dead stake (1 PROFIT) is irrecoverably locked at initialization to prevent first-depositor attacks
+
+---
+
+## Launch Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| Curve type | Linear (integral-priced) |
+| Tokens for sale | 460M per curve |
+| SOL target | 500 SOL per curve |
+| Start price | 0.00000045 SOL/token |
+| End price | 0.000001725 SOL/token |
+| Per-wallet cap | 20M tokens (2%) |
+| Minimum purchase | 0.05 SOL |
+| Deadline | 48 hours (~432,000 slots) |
+| Sell tax (during curve) | 15% of SOL output |
+
+Both CRIME and FRAUD curves must fill within the deadline. If either fails, both are cancelled and all SOL is refunded via burn-and-claim mechanism.

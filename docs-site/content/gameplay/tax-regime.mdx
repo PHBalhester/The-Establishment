@@ -1,0 +1,96 @@
+import { Callout } from 'nextra/components'
+
+# The Tax System
+
+> *"The avoidance of taxes is the only intellectual pursuit that carries any reward."*
+
+---
+
+## The Dual Tax System
+
+The Fantastical Finance Factory operates two faction tokens: **CRIME** and **FRAUD**. Each token has its own SOL liquidity pool, and every swap through these pools is subject to a tax. But here is where it gets interesting -- the tax rates are not fixed. They flip, they rotate, and they create **directional asymmetry** that drives the entire protocol.
+
+Each epoch, the protocol uses verifiable randomness to assign each token to one of two roles:
+
+| Role | Buy Tax | Sell Tax |
+|------|---------|----------|
+| **Cheap Side** | Low (1-4%) | High (11-14%) |
+| **Expensive Side** | High (11-14%) | Low (1-4%) |
+
+One token is always cheap to buy and expensive to sell. The other is always expensive to buy and cheap to sell.
+
+---
+
+## How Tax Rates Change
+
+Each epoch, the Switchboard VRF (Verifiable Random Function) produces a random value that determines two things:
+
+1. **Which token is the cheap side** -- There is a 75% chance the cheap side flips to the other token, and a 25% chance the current assignment stays.
+2. **The exact tax rates** -- Each token gets independent buy and sell rates within the low band (1-4%) or high band (11-14%), depending on which side it is on.
+
+The randomness is produced by Switchboard oracles running inside TEEs, meaning nobody can predict or manipulate the rates before they are set.
+
+---
+
+## The 75% Flip
+
+At each epoch boundary, there is a **75% chance** that the cheap side flips to the other token.
+
+- If CRIME is cheap this epoch, there is a 75% chance FRAUD becomes cheap next epoch.
+- If FRAUD is cheap this epoch, there is a 75% chance CRIME becomes cheap next epoch.
+- There is always a 25% chance the current regime persists.
+
+---
+
+## A Worked Example
+
+Let's walk through two consecutive epochs to see this in action.
+
+### Epoch 42: CRIME is the cheap side
+
+| Token | Buy Tax | Sell Tax |
+|-------|---------|----------|
+| CRIME | 3% (low) | 12% (high) |
+| FRAUD | 13% (high) | 2% (low) |
+
+CRIME is cheap to buy, so buyers pile in. That buying pressure pushes CRIME's price **up**. Meanwhile FRAUD is cheap to sell, so holders take profits. That selling pressure pushes FRAUD's price **down**.
+
+By the end of the epoch, CRIME is trading above its fair value and FRAUD is trading below.
+
+### Epoch 43: The regime flips (75% chance)
+
+| Token | Buy Tax | Sell Tax |
+|-------|---------|----------|
+| CRIME | 11% (high) | 4% (low) |
+| FRAUD | 1% (low) | 14% (high) |
+
+Now the tokens are mispriced relative to the new regime. CRIME is overvalued but suddenly cheap to sell. FRAUD is undervalued but suddenly cheap to buy. Arbitrageurs buy the undervalued token, sell the overvalued one, and pocket the spread — all while generating tax revenue for the protocol.
+
+---
+
+## Tax-Free Zones
+
+Not everything is taxed. **Only the SOL pools** (CRIME/SOL and FRAUD/SOL) carry protocol taxes.
+
+**Taxed:** CRIME/SOL and FRAUD/SOL pool swaps (variable epoch taxes + 1% LP fee).
+
+**Not taxed:** Conversion vault operations (fixed 100:1 rate, no fees whatsoever).
+
+<Callout type="info">
+There are no PROFIT pools. PROFIT is only acquired through the conversion vault at a fixed 100:1 rate with zero fees.
+</Callout>
+
+---
+
+## Where Do the Taxes Go?
+
+Every SOL collected in taxes is split on-chain by the Tax Program into three fixed destinations:
+
+- **71%** goes to [PROFIT stakers](/earning/profit-and-yield) as SOL rewards (deposited into the staking escrow vault).
+- **24%** flows into the [Carnage Fund](/gameplay/carnage-fund) SOL vault, fueling the protocol's buyback-and-burn engine.
+- **5%** goes to the protocol treasury (funding crank bounties and operational costs).
+
+For micro-taxes below 4 lamports, the full amount goes to staking to avoid rounding errors across three destinations.
+
+---
+

@@ -1,0 +1,16 @@
+{
+  "generated": "2026-03-15T20:04:53Z",
+  "cluster": "mainnet",
+  "programs": {
+    "amm": "98f8ed5294cee8d43996643e7b607cfc0fe2bedb911dc4ad978a4d310347c8d5",
+    "bonding_curve": "823b60d4451fd5c5adfcbfadb7e9c4aac26eeb4946326c59526a5f692e006661",
+    "conversion_vault": "cf1f145aba36dcaa3520d40671cc615ca8cbc66a259403b19147038ee3c833c2",
+    "epoch_program": "32abd87b34bd382008d012da6d462993498a712154e2d9858e6d6137ba3d33cf",
+    "fake_tax_program": "593c5c867631f020b40bf21cdf92eb6867c61f228ba5eb61ac3edf6398801722",
+    "mock_tax_program": "32428a1edf94a3afbd318411f0d91a65566de358cb65cb48ae417f5fa7ccd25b",
+    "staking": "568b8ed90c4f90a79381230289aefc86073f96e257b1db2a0e1e790d53e16108",
+    "stub_staking": "2cf60fd3270c23fb3e645cb021a8bd111b4df4df5ca3762e160a962120463fa2",
+    "tax_program": "7ab8aedb9d28312d4839c977358ca1abe3c6212288fe68af38d5f0a01f154498",
+    "transfer_hook": "41d8cb1ec0a5961c4be9f156fc7c524a505c48ae781b80f3130758ac31c8dde7"
+  }
+}

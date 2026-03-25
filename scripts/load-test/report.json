@@ -1,0 +1,98 @@
+{
+  "config": {
+    "url": "http://localhost:3000",
+    "connections": 10,
+    "durationMs": 90000,
+    "actualDurationMs": 90006
+  },
+  "connections": {
+    "attempted": 10,
+    "connected": 10,
+    "gotInitialState": 10,
+    "errors": 0
+  },
+  "eventCoverage": {
+    "crimePool": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "fraudPool": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "epochState": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "stakePool": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "carnageFund": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "crimeCurve": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "fraudCurve": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "carnageSolVault": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "crimeSupply": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "fraudSupply": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    },
+    "currentSlot": {
+      "totalCount": 170,
+      "avgInterval": 5223,
+      "coverage": 1
+    },
+    "stakingStats": {
+      "totalCount": 0,
+      "avgInterval": 0,
+      "coverage": 0
+    }
+  },
+  "bigintIntegrity": {
+    "failures": 0,
+    "uniqueFailures": []
+  },
+  "creditDelta": {
+    "before": 17,
+    "after": 22,
+    "delta": 5
+  },
+  "reconnect": {
+    "reconnected": true,
+    "gotInitialState": true,
+    "timeToReconnectMs": 8
+  },
+  "wsSubscriber": {
+    "initialized": true,
+    "wsConnected": true,
+    "latestSlot": 449836231,
+    "lastSlotReceivedAt": 1774028516626,
+    "fallbackActive": false
+  },
+  "timestamp": "2026-03-20T17:41:57.002Z"
+}

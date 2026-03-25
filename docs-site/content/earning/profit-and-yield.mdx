@@ -1,0 +1,146 @@
+# Staking & Rewards
+
+> *"The question every investor asks: 'Where do the rewards come from?' In most protocols, the answer involves hand-waving and newly printed tokens. Here, the answer is four words: people paid their taxes."*
+
+---
+
+## The Core Idea
+
+PROFIT is the reward token. You must stake it to earn rewards in exchange for providing stability and depth to the protocol. Staked PROFIT earns SOL rewards sourced directly from 71% of all trading taxes collected by the protocol.
+
+No printed tokens. No inflationary rewards. No ponzinomics.
+
+If nobody trades, nobody earns. If trading volume is high, everyone earns. Direct cause and effect.
+
+---
+
+## Where Rewards Come From
+
+Every time someone swaps through the CRIME/SOL or FRAUD/SOL pools, they pay a variable tax in SOL. That tax is split automatically by the Tax Program:
+
+| Destination | Share |
+|-------------|-------|
+| **PROFIT Stakers** | **71%** |
+| Carnage Fund | 24% |
+| Treasury | 5% |
+
+71% of all tax revenue goes directly to the staking escrow vault, where it is distributed to stakers proportionally. The staking escrow is a protocol-controlled PDA that no human can access, divert, or drain.
+
+This is not a promise. It is on-chain code that executes on every single taxed swap.
+
+---
+
+## How to Earn: Step by Step
+
+### 1. Acquire PROFIT
+
+PROFIT cannot be purchased directly for SOL. It is acquired through the **conversion vault**:
+
+- **100 CRIME = 1 PROFIT** (fixed rate)
+- **100 FRAUD = 1 PROFIT** (fixed rate)
+
+To get CRIME or FRAUD, swap SOL through the respective SOL pool. Then convert your tokens to PROFIT through the vault.
+
+### 2. Stake Your PROFIT
+
+Head to the Rewards Vat on the website and stake your PROFIT. Your tokens are transferred to the protocol's stake vault and your staking position is recorded on-chain.
+
+There is no minimum stake. Stake as much or as little as you want.
+
+### 3. SOL Rewards Accumulate Automatically
+
+Once staked, your share of the rewards is calculated automatically based on the global cumulative reward index. You do not need to "check in," click buttons, or do anything. Rewards accrue passively based on your proportion of the total staked PROFIT.
+
+### 4. Claim SOL Anytime
+
+Hit the Claim button in the Rewards Vat to withdraw your accumulated SOL rewards. Your staked PROFIT stays in place and continues earning.
+
+There is no deadline, no epoch window, no "use it or lose it." Your rewards accumulate until you decide to claim them.
+
+### 5. Unstake With Conditions
+
+Unstake from the Rewards Vat to withdraw some or all of your staked PROFIT. There are two conditions:
+
+- **12-hour cooldown after claiming:** If you have claimed rewards, you must wait 12 hours before unstaking. This prevents claim-then-exit gaming.
+- **Pending rewards are forfeited:** Any unclaimed SOL rewards are forfeited when you unstake. Forfeited rewards are redistributed to remaining stakers, creating additional incentive to stay staked.
+- **Never claimed?** You can unstake immediately with no cooldown.
+
+You get your PROFIT back, but at the cost of any pending rewards.
+
+---
+
+## How Distribution Works
+
+The protocol uses the **Synthetix cumulative reward-per-token pattern** -- the same battle-tested math pattern that secures billions of dollars in DeFi. Here is how it works in plain English:
+
+### Pro-Rata Distribution
+
+Your reward share is simple:
+
+- **Your share = Your staked PROFIT / Total staked PROFIT**
+
+If you have staked 500,000 PROFIT out of the total 20,000,000 supply then you would earn 2.5% of all rewards.
+
+### Cumulative Index
+
+Instead of distributing rewards to every staker on every swap (which would be impossibly expensive on-chain), the protocol maintains a single number: the **cumulative reward per token**.
+
+Every epoch, when `consume_randomness` executes, it CPIs into the Staking Program's `update_cumulative` instruction to finalize epoch rewards. The cumulative index increases by:
+
+- **increase = epoch_rewards / total_staked**
+
+When you claim, your rewards are:
+
+- **rewards = your_staked * (current_cumulative - your_last_checkpoint)**
+
+This means the protocol can support thousands of stakers without scaling compute costs. The math is O(1) regardless of how many people are staking.
+
+---
+
+## PROFIT Supply
+
+| Property | Value |
+|----------|-------|
+| Total supply | 20,000,000 PROFIT |
+| Token standard | Token-2022 (with transfer hook) |
+| Supply cap | Fixed forever (mint authority burned) |
+| Team allocation | None |
+| Vesting schedule | None |
+| Insider tokens | None |
+| Acquisition | Conversion vault (100:1 from CRIME or FRAUD) |
+
+PROFIT cannot be bought directly. It flows through the conversion vault: 100 CRIME or 100 FRAUD converts to 1 PROFIT. The vault is seeded with 250M CRIME, 250M FRAUD, and 20M PROFIT at protocol launch.
+
+There are no VC allocations, no team reserves, no vesting cliffs, no "strategic partners" getting free tokens. Every PROFIT in existence is acquired through the same conversion vault available to everyone.
+
+---
+
+## Staking Details
+
+| Property | Value |
+|----------|-------|
+| Reward denomination | SOL (native) |
+| Reward source | 71% of all SOL trading taxes |
+| Distribution pattern | Synthetix cumulative reward-per-token |
+| Claim frequency | Anytime (permissionless) |
+| Unstake cooldown | 12 hours after claiming (none if never claimed) |
+| Minimum stake | No minimum |
+| Partial unstake | Supported |
+| Reward expiry | Never |
+| Forfeiture on unstake | Yes (redistributed to remaining stakers) |
+
+---
+
+## What Affects Your Rewards
+
+Your actual SOL rewards depend on two factors:
+
+### 1. Trading Volume
+
+More trading volume means more taxes collected means more SOL in the staking escrow. High-activity periods (frequent tax flips, Carnage events, market volatility) generate more rewards than quiet periods.
+
+### 2. Total Staked PROFIT
+
+Your share is proportional. If total staked PROFIT doubles, your share of each epoch's rewards halves (assuming your stake stays the same). The early stakers when total staked is low earn more per token than latecomers when the pool is crowded.
+
+This creates a natural equilibrium: if rewards are attractive, more people stake, which dilutes per-token rewards, which makes it less attractive, which causes some to unstake. The market finds the clearing rate. Forfeiture adds another dimension: unstaking forfeits pending rewards, which are redistributed to remaining stakers, creating additional incentive to stay staked.
