@@ -21,6 +21,7 @@ import { useCallback } from 'react';
 import Image from 'next/image';
 import { SCENE_DATA } from '@/lib/image-data';
 import { useModal } from '@/hooks/useModal';
+import { useProtocolWallet } from '@/hooks/useProtocolWallet';
 import type { StationMeta } from './scene-data';
 
 interface SceneStationProps {
@@ -30,7 +31,13 @@ interface SceneStationProps {
 
 export function SceneStation({ station }: SceneStationProps) {
   const { openModal } = useModal();
-  const overlay = SCENE_DATA.overlays[station.overlayId];
+  const { connected } = useProtocolWallet();
+
+  // Wallet station: swap to "wallet-connected" image when connected
+  const isWalletConnected =
+    station.overlayId === 'connect-wallet' && connected;
+  const overlayId = isWalletConnected ? 'wallet-connected' : station.overlayId;
+  const overlay = SCENE_DATA.overlays[overlayId];
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -58,6 +65,32 @@ export function SceneStation({ station }: SceneStationProps) {
       console.warn(`SceneStation: unknown overlayId "${station.overlayId}"`);
     }
     return null;
+  }
+
+  // When wallet is connected, render as static decoration (no button, no glow)
+  if (isWalletConnected) {
+    return (
+      <div
+        className="absolute z-overlays"
+        style={{
+          left: `${overlay.left}%`,
+          top: `${overlay.top}%`,
+          width: `${overlay.widthPct}%`,
+          height: `${overlay.heightPct}%`,
+        }}
+      >
+        <Image
+          src={overlay.src}
+          alt="Wallet Connected"
+          fill
+          quality={82}
+          placeholder="blur"
+          blurDataURL={overlay.blurDataURL}
+          loading="lazy"
+          className="object-contain"
+        />
+      </div>
+    );
   }
 
   return (

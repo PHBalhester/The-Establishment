@@ -60,6 +60,10 @@ const nextConfig: NextConfig = {
     qualities: [75, 80, 82, 85],
     formats: ["image/webp"],
     deviceSizes: [1920, 2560, 3840],
+    // Serve pre-optimized WebPs directly from public/ -- skip Next.js
+    // image optimization endpoint (/_next/image) which has persistent
+    // cache issues on Railway/Nixpacks deploys.
+    unoptimized: true,
   },
 
   turbopack: {
