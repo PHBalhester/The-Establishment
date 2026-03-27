@@ -12,7 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { checkRateLimit, getClientIp, RPC_RATE_LIMIT } from "@/lib/rate-limit";
+import { checkRateLimit, getClientIp, RPC_RATE_LIMIT, SEND_TX_RATE_LIMIT, SIMULATE_TX_RATE_LIMIT } from "@/lib/rate-limit";
 import { captureException } from "@/lib/sentry";
 import { creditCounter } from "@/lib/credit-counter";
 
@@ -27,35 +27,38 @@ export const dynamic = "force-dynamic";
 // useCarnageData, useStaking), transaction builders (swap-builders,
 // multi-hop-builder, staking-builders, wsol), confirm-transaction,
 // useProtocolWallet, SwapForm, BuyForm, SellForm, RefundPanel.
+//
+// Each method has an inline comment explaining which frontend feature uses it.
+// If you add a method, document it. If you remove one, grep the frontend first.
 // ---------------------------------------------------------------------------
 const ALLOWED_METHODS = new Set([
-  // Account & balance queries
-  "getAccountInfo",
-  "getBalance",
-  "getMultipleAccounts",
-  "getTokenAccountsByOwner",
-  "getTokenAccountBalance",
-  "getProgramAccounts",
+  // -- Account & balance queries --
+  "getAccountInfo",           // Pool state, staking state, epoch state, bonding curve reads (usePoolPrices, useStaking, useCarnageData)
+  "getBalance",               // SOL balance display in wallet panel (useTokenBalances)
+  "getMultipleAccounts",      // Batch-fetch pool + epoch + staking accounts in one call (usePoolPrices, protocol-store)
+  "getTokenAccountsByOwner",  // Token balance list for CRIME/FRAUD/PROFIT (useTokenBalances)
+  "getTokenAccountBalance",   // Single SPL balance check during swap (swap-builders)
+  "getProgramAccounts",       // Discover user staking positions, bonding curve state (useStaking, useCarnageData)
 
-  // Transaction lifecycle
-  "getLatestBlockhash",
-  "sendTransaction",
-  "simulateTransaction",
-  "getSignatureStatuses",
-  "confirmTransaction",
-  "getBlockHeight",
+  // -- Transaction lifecycle --
+  "getLatestBlockhash",       // Required for every transaction: blockhash + lastValidBlockHeight (all builders)
+  "sendTransaction",          // Submit signed transactions to the network (useProtocolWallet) [rate-limited: 10/min]
+  "simulateTransaction",      // Wallet preview / Blowfish simulation before signing (Phantom, Backpack) [rate-limited: 20/min]
+  "getSignatureStatuses",     // Poll transaction confirmation status (confirm-transaction)
+  "confirmTransaction",       // WebSocket-based confirmation listener (confirm-transaction)
+  "getBlockHeight",           // Block height for transaction expiry checks (confirm-transaction)
 
-  // Slot / block info
-  "getSlot",
+  // -- Slot / block info --
+  "getSlot",                  // Current slot for epoch progress display and health check fallback (useCurrentSlot)
 
-  // Address Lookup Table (v0 transactions)
-  "getAddressLookupTable",
+  // -- Address Lookup Table (v0 transactions) --
+  "getAddressLookupTable",    // Resolve ALT for multi-hop v0 transactions (multi-hop-builder, carnage)
 
-  // Helius-specific: priority fee estimation
-  "getPriorityFeeEstimate",
+  // -- Helius-specific --
+  "getPriorityFeeEstimate",   // Dynamic priority fee for transaction landing (Helius DAS extension, all builders)
 
-  // Minimum rent exemption (WSOL account creation)
-  "getMinimumBalanceForRentExemption",
+  // -- Rent --
+  "getMinimumBalanceForRentExemption", // WSOL account creation: compute rent-exempt minimum (wsol helpers)
 ]);
 
 // ---------------------------------------------------------------------------
@@ -162,6 +165,25 @@ export async function POST(request: NextRequest) {
           { jsonrpc: "2.0", error: { code: -32601, message: `Method not allowed: ${req.method}` }, id: req.id ?? null },
           { status: 400 },
         );
+      }
+
+      // --- Per-method rate limiting (defense in depth, on top of shared 300/min) ---
+      if (req.method === "sendTransaction") {
+        const sendCheck = checkRateLimit(clientIp, SEND_TX_RATE_LIMIT, "rpc:sendTransaction");
+        if (!sendCheck.allowed) {
+          return new Response("Too Many Requests", {
+            status: 429,
+            headers: { "Retry-After": String(sendCheck.retryAfter) },
+          });
+        }
+      } else if (req.method === "simulateTransaction") {
+        const simCheck = checkRateLimit(clientIp, SIMULATE_TX_RATE_LIMIT, "rpc:simulateTransaction");
+        if (!simCheck.allowed) {
+          return new Response("Too Many Requests", {
+            status: 429,
+            headers: { "Retry-After": String(simCheck.retryAfter) },
+          });
+        }
       }
     }
 

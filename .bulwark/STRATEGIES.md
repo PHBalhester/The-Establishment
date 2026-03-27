@@ -68,7 +68,7 @@
 **Estimated Priority:** Tier 1
 **Hypothesis:** Committed Helius API key in `.env.devnet` enables attacker to create shadow webhooks for passive surveillance or delete the production webhook to blind the data pipeline.
 **Attack Vector:** Extract HELIUS_API_KEY from git → POST `https://api.helius.xyz/v0/webhooks?api-key=...` → register attacker-controlled webhook URL for same program IDs.
-**Target Code:** `.env.devnet:8` (HELIUS_API_KEY=[REDACTED-DEVNET-KEY]-...), `scripts/webhook-manage.ts`
+**Target Code:** `.env.devnet:8` (HELIUS_API_KEY=[REDACTED-DEVNET-KEY]...), `scripts/webhook-manage.ts`
 **Potential Impact:** HIGH — passive surveillance of all protocol events OR data pipeline disruption
 **Requires:** Repository read access
 **Investigation Approach:** Verify API key scope (webhook CRUD vs RPC-only). Check if key works for mainnet webhooks.

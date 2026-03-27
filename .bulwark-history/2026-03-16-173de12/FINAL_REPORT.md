@@ -203,7 +203,7 @@ Chains H010 + H005 + H016 into a two-phase attack: Phase 1 steals ~2000 SOL via 
 
 | ID | Title | Key Detail |
 |----|-------|------------|
-| H002 | Helius API Key in Client Bundle | Key `[REDACTED-DEVNET-KEY]-...` in `shared/constants.ts:474`, grants webhook CRUD. |
+| H002 | Helius API Key in Client Bundle | Key `[REDACTED-DEVNET-KEY]...` in `shared/constants.ts:474`, grants webhook CRUD. |
 | H011 | DB Without TLS | Connection string may lack `sslmode=require`. Railway may enforce, unvalidated. |
 | H013 | Crank Vault Top-Up Without Limit | No cumulative counter, no daily cap on 0.005 SOL/cycle top-ups. |
 | H022 | Sell Path Zero AMM Slippage | `minimum_output_lamports: 0` hardcoded in sell CPI at `swap_sol_sell.rs`. |

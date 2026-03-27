@@ -319,7 +319,7 @@ The on-chain SOS audit identified critical findings (bonding curve authority gap
 The webhook auth pattern `if (secret) { check(header, secret) }` means authentication is disabled when the env var is unset. This is the most-flagged cross-cutting concern, identified by SEC-01, SEC-02, CHAIN-04, API-04, WEB-02, DATA-01, ERR-01, ERR-02, INFRA-03, INFRA-05.
 
 ### Theme 2: Helius API Key Exposure (10 agents flagged)
-Key `[REDACTED-DEVNET-KEY]-...` is hardcoded in `shared/constants.ts:474`, `shared/programs.ts:22`, and 2 script files. Bundled into client JS. Permanently in git history. Grants RPC access AND webhook management API access.
+Key `[REDACTED-DEVNET-KEY]...` is hardcoded in `shared/constants.ts:474`, `shared/programs.ts:22`, and 2 script files. Bundled into client JS. Permanently in git history. Grants RPC access AND webhook management API access.
 
 ### Theme 3: No MEV Protection (4 agents flagged)
 User swap transactions use standard Helius RPC with no Jito bundles or MEV-protected submission. Combined with default 5% slippage, this creates a significant sandwich attack surface.

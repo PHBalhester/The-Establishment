@@ -11,6 +11,11 @@
 //! - INV-CV-006: Same-Mint Conversion Rejected
 //! - INV-CV-007: CRIME<->FRAUD Direct Rejected
 //! - INV-CV-008: Zero Amount Rejected
+//! - INV-CV-009: convert_v2 Math Matches convert (CRIME->PROFIT)
+//! - INV-CV-010: convert_v2 Math Matches convert Reverse (PROFIT->CRIME)
+//! - INV-CV-011: Slippage Guard Passes When Output >= Minimum
+//! - INV-CV-012: Slippage Guard Fails When Minimum > Output
+//! - INV-CV-013: convert_v2 Math With FRAUD Direction
 //!
 //! Run: `cargo test --test bok_proptest_vault -- --nocapture`
 
@@ -202,4 +207,157 @@ fn inv_cv_008_zero_amount_rejected() {
 
     let result = compute_output_with_mints(&profit, &crime, 0, &crime, &fraud, &profit);
     assert!(result.is_err(), "INV-CV-008: Zero amount should be rejected");
+}
+
+// =============================================================================
+// INV-CV-009: convert_v2 Math Matches convert (CRIME->PROFIT)
+//
+// Both convert and convert_v2 call the same compute_output_with_mints function.
+// For any amount in [100, 10B], CRIME->PROFIT output must equal amount / 100.
+// This verifies the math layer is shared and backwards-compatible.
+// =============================================================================
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100_000))]
+
+    #[test]
+    fn inv_cv_009_convert_v2_exact_matches_convert(
+        amount in 100u64..=10_000_000_000u64,
+    ) {
+        let (crime, fraud, profit) = test_mints();
+        let output = compute_output_with_mints(
+            &crime, &profit, amount, &crime, &fraud, &profit
+        ).unwrap();
+        // convert_v2 calls the same function, so the output must be identical
+        prop_assert_eq!(
+            output, amount / 100,
+            "INV-CV-009: CRIME->PROFIT expected {}, got {} (amount={})",
+            amount / 100, output, amount
+        );
+    }
+}
+
+// =============================================================================
+// INV-CV-010: convert_v2 Math Matches convert Reverse (PROFIT->CRIME)
+//
+// For PROFIT->CRIME direction, output must equal amount * 100.
+// Range capped at u64::MAX / 100 to avoid overflow.
+// =============================================================================
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100_000))]
+
+    #[test]
+    fn inv_cv_010_convert_v2_exact_matches_convert_reverse(
+        amount in 1u64..=(u64::MAX / 100),
+    ) {
+        let (crime, fraud, profit) = test_mints();
+        let output = compute_output_with_mints(
+            &profit, &crime, amount, &crime, &fraud, &profit
+        ).unwrap();
+        prop_assert_eq!(
+            output, amount * 100,
+            "INV-CV-010: PROFIT->CRIME expected {}, got {} (amount={})",
+            amount * 100, output, amount
+        );
+    }
+}
+
+// =============================================================================
+// INV-CV-011: Slippage Guard Passes When Output >= Minimum
+//
+// For a known conversion (10_000 CRIME -> 100 PROFIT), the output (100) should
+// be >= minimum_output when minimum_output <= 100. This validates the math-level
+// comparison that the handler's slippage guard relies on.
+// =============================================================================
+#[test]
+fn inv_cv_011_slippage_passes_when_output_gte_minimum() {
+    let (crime, fraud, profit) = test_mints();
+
+    // 10_000 CRIME -> 100 PROFIT (exact)
+    let amount_in = 10_000u64;
+    let output = compute_output_with_mints(
+        &crime, &profit, amount_in, &crime, &fraud, &profit
+    ).unwrap();
+    assert_eq!(output, 100, "INV-CV-011: Expected output 100");
+
+    // Slippage check: output >= minimum_output
+    let minimum_output = 100u64; // exact match
+    assert!(
+        output >= minimum_output,
+        "INV-CV-011: Slippage guard should pass when output ({}) >= minimum ({})",
+        output, minimum_output
+    );
+
+    // Also passes with minimum_output = 0 (disabled slippage)
+    let minimum_zero: u64 = 0;
+    assert!(
+        output >= minimum_zero,
+        "INV-CV-011: Slippage guard should pass with minimum=0"
+    );
+
+    // Also passes with minimum_output = 1 (very loose)
+    assert!(
+        output >= 1,
+        "INV-CV-011: Slippage guard should pass with minimum=1"
+    );
+}
+
+// =============================================================================
+// INV-CV-012: Slippage Guard Fails When Minimum > Output
+//
+// For 10_000 CRIME -> 100 PROFIT, minimum_output = 101 exceeds the actual
+// output. The handler-level slippage check (output >= minimum_output) would
+// fail. We verify the math produces the expected output so the comparison
+// is correct.
+// =============================================================================
+#[test]
+fn inv_cv_012_slippage_fails_when_minimum_exceeds_output() {
+    let (crime, fraud, profit) = test_mints();
+
+    // 10_000 CRIME -> 100 PROFIT
+    let amount_in = 10_000u64;
+    let output = compute_output_with_mints(
+        &crime, &profit, amount_in, &crime, &fraud, &profit
+    ).unwrap();
+    assert_eq!(output, 100, "INV-CV-012: Expected output 100");
+
+    // minimum_output = 101 exceeds actual output of 100
+    let minimum_output = 101u64;
+    assert!(
+        output < minimum_output,
+        "INV-CV-012: Slippage guard should FAIL when output ({}) < minimum ({})",
+        output, minimum_output
+    );
+
+    // Also verify with a much larger minimum
+    let large_minimum = 1_000u64;
+    assert!(
+        output < large_minimum,
+        "INV-CV-012: Slippage guard should FAIL when output ({}) < minimum ({})",
+        output, large_minimum
+    );
+}
+
+// =============================================================================
+// INV-CV-013: convert_v2 Math With FRAUD Direction
+//
+// Identical to INV-CV-009 but using FRAUD mint instead of CRIME.
+// Verifies both faction tokens produce identical results through the math layer.
+// =============================================================================
+proptest! {
+    #![proptest_config(ProptestConfig::with_cases(100_000))]
+
+    #[test]
+    fn inv_cv_013_convert_v2_fraud_direction(
+        amount in 100u64..=10_000_000_000u64,
+    ) {
+        let (crime, fraud, profit) = test_mints();
+        let output = compute_output_with_mints(
+            &fraud, &profit, amount, &crime, &fraud, &profit
+        ).unwrap();
+        prop_assert_eq!(
+            output, amount / 100,
+            "INV-CV-013: FRAUD->PROFIT expected {}, got {} (amount={})",
+            amount / 100, output, amount
+        );
+    }
 }

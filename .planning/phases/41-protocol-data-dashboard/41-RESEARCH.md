@@ -428,7 +428,7 @@ function useEpochCountdown(epochStartSlot: number | null, currentSlot: number | 
    - Recommendation: Add `SLOTS_PER_EPOCH = 750` to `shared/constants.ts` alongside existing constants. It's a protocol constant that won't change between epochs.
 
 4. **WebSocket URL for Helius Devnet**
-   - What we know: Helius WebSocket URL is `wss://devnet.helius-rpc.com/?api-key=...`. The existing `DEVNET_RPC_URL` is `https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...`.
+   - What we know: Helius WebSocket URL is `wss://devnet.helius-rpc.com/?api-key=...`. The existing `DEVNET_RPC_URL` is `https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...`.
    - What's unclear: Whether `@solana/web3.js` Connection automatically converts HTTPS to WSS, or if it needs explicit `wsEndpoint` configuration.
    - Recommendation: The `Connection` constructor can accept `wsEndpoint` in its config. Test with default first (web3.js usually handles the conversion). If WebSocket fails, explicitly set `wsEndpoint: DEVNET_RPC_URL.replace("https://", "wss://")`.
 

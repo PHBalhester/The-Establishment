@@ -100,7 +100,7 @@ export interface VaultConvertParams {
   userPublicKey: PublicKey;
   /** Input amount in base units (6 decimals) */
   amountInBaseUnits: number;
-  /** Minimum output (deterministic, so same as expected) */
+  /** Minimum output tokens to receive (slippage protection) */
   minimumOutput: number;
   /** Input mint (CRIME, FRAUD, or PROFIT) */
   inputMint: PublicKey;
@@ -478,6 +478,7 @@ export async function buildVaultConvertTransaction(params: VaultConvertParams): 
     connection,
     userPublicKey,
     amountInBaseUnits,
+    minimumOutput,
     inputMint,
     outputMint,
     computeUnits = DEFAULT_COMPUTE_UNITS,
@@ -531,7 +532,7 @@ export async function buildVaultConvertTransaction(params: VaultConvertParams): 
   const vaultProgram = getVaultProgram(connection);
 
   const convertIx = await vaultProgram.methods
-    .convert(new BN(amountInBaseUnits))
+    .convertV2(new BN(amountInBaseUnits), new BN(minimumOutput))
     .accountsStrict({
       user: userPublicKey,
       vaultConfig,

@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { getClientIp } from "../rate-limit";
+import {
+  getClientIp,
+  RPC_RATE_LIMIT,
+  HEALTH_RATE_LIMIT,
+  SEND_TX_RATE_LIMIT,
+  SIMULATE_TX_RATE_LIMIT,
+} from "../rate-limit";
 
 /** Helper to create a minimal Request with specific headers */
 function makeRequest(headers: Record<string, string> = {}): Request {
@@ -63,5 +69,29 @@ describe("getClientIp", () => {
       expect(getClientIp(req)).not.toBe("ATTACKER_SPOOFED");
       expect(getClientIp(req)).toBe("203.0.113.50");
     });
+  });
+});
+
+// ── Per-method rate limit profiles (Phase 108) ────────────────────────
+
+describe("per-method rate limit profiles", () => {
+  it("HEALTH_RATE_LIMIT: 30 requests per 60s window", () => {
+    expect(HEALTH_RATE_LIMIT.maxRequests).toBe(30);
+    expect(HEALTH_RATE_LIMIT.windowMs).toBe(60_000);
+  });
+
+  it("SEND_TX_RATE_LIMIT: 10 requests per 60s window", () => {
+    expect(SEND_TX_RATE_LIMIT.maxRequests).toBe(10);
+    expect(SEND_TX_RATE_LIMIT.windowMs).toBe(60_000);
+  });
+
+  it("SIMULATE_TX_RATE_LIMIT: 20 requests per 60s window", () => {
+    expect(SIMULATE_TX_RATE_LIMIT.maxRequests).toBe(20);
+    expect(SIMULATE_TX_RATE_LIMIT.windowMs).toBe(60_000);
+  });
+
+  it("RPC_RATE_LIMIT regression: still 300 requests per 60s window", () => {
+    expect(RPC_RATE_LIMIT.maxRequests).toBe(300);
+    expect(RPC_RATE_LIMIT.windowMs).toBe(60_000);
   });
 });

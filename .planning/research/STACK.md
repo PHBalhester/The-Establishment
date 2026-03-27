@@ -1,646 +1,311 @@
-# Technology Stack: Frontend Tech Layer
+# Technology Stack
 
-**Project:** Dr. Fraudsworth's Finance Factory -- Frontend
-**Researched:** 2026-02-15
-**Overall Confidence:** MEDIUM (web verification tools unavailable during research; versions from npm registry could not be live-queried -- recommend `npm view <pkg> version` verification before installing)
+**Project:** Dr. Fraudsworth v1.5 Feature Additions
+**Researched:** 2026-03-25
+**Focus:** Stack additions for Jupiter integration, USDC pools, Switchboard gateway failover, Vault convert-all
 
----
+## Current Stack Baseline (DO NOT CHANGE)
 
-## Context
-
-This STACK.md covers ONLY the frontend technology layer. The on-chain protocol stack is complete and validated (see `.planning/research/STACK.md` v0.7 for that). The frontend must integrate with:
-
-- **Anchor 0.32.1** with `@coral-xyz/anchor` 0.32.1 TS client
-- **@solana/web3.js 1.98.4** (NOT v2 -- see critical constraint below)
-- **@solana/spl-token 0.4.14** (Token-2022 operations)
-- **5 on-chain programs** with generated IDL JSON and TypeScript types in `target/idl/` and `target/types/`
-- **VersionedTransaction v0 with ALT** for sell-path transactions (23+ accounts)
-- **PDA manifest** system at `scripts/deploy/pda-manifest.json`
-
----
-
-## Critical Constraint: @solana/web3.js v1 Lock
-
-**The entire frontend MUST use `@solana/web3.js` v1.x, NOT v2.x.**
-
-The skill file at `.claude/skills/solana-dev/frontend-framework-kit.md` references `@solana/client`, `@solana/react-hooks`, and `@solana/kit`. These are all part of the **web3.js v2 ecosystem** (also called "Solana Kit" or "framework-kit"). **We cannot use any of these.**
-
-Why:
-1. `@coral-xyz/anchor` 0.32.1 depends on `@solana/web3.js` v1.x internally. Its `Program`, `Provider`, `BN`, `PublicKey`, `Transaction` types are all v1 types.
-2. All 5 IDL type files in `target/types/` generate v1-compatible TypeScript.
-3. All existing scripts (`swap-flow.ts`, `alt-helper.ts`, `carnage-flow.ts`, `staking-flow.ts`) use v1 APIs (`Connection`, `Transaction`, `VersionedTransaction`, `PublicKey.findProgramAddressSync`).
-4. `@solana/wallet-adapter` (the established wallet connection library) works with web3.js v1.
-5. Mixing v1 and v2 in the same app is not feasible -- they have incompatible `PublicKey` types, `Transaction` types, and connection abstractions.
-
-**Verdict:** Use `@solana/wallet-adapter-*` (v1-compatible) for wallet connection. Use `@coral-xyz/anchor` 0.32.1 for transaction building. This is the same stack that 95%+ of Solana DeFi frontends use today.
-
-**Confidence:** HIGH -- verified from installed `node_modules/@coral-xyz/anchor/package.json` showing v1 dependency chain.
+| Technology | Version | Role |
+|------------|---------|------|
+| Anchor | 0.32.1 | On-chain framework |
+| anchor-lang | 0.32.1 | Rust program SDK |
+| anchor-spl | 0.32.1 | SPL/T22 token helpers |
+| solana-sdk (dev) | 2.2 | Test infrastructure |
+| switchboard-on-demand (Rust) | =0.11.3 | VRF on-chain accounts |
+| @switchboard-xyz/on-demand (JS) | ^3.7.3 | VRF client-side flow |
+| @coral-xyz/anchor (JS) | 0.32.1 | Client Anchor SDK |
+| Next.js | 16.1.6 | Frontend |
 
 ---
 
-## Recommended Stack
+## Recommended Stack Additions
 
-### Core Framework
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| Next.js | ^15.x (verify with `npm view next version`) | React framework with SSR/SSG, API routes, App Router | Industry standard for Solana dApps. API routes serve as webhook endpoints for Helius. App Router provides clean layout composition. Static export possible for CDN deployment. Railway supports Next.js natively. |
-| React | ^19.x (bundled with Next.js 15) | UI library | Comes with Next.js. Hooks model integrates well with wallet-adapter. |
-| TypeScript | ^5.3+ (keep aligned with monorepo) | Type safety | Already in monorepo at ^5.3.2. Frontend tsconfig extends or parallels existing config. Critical for IDL type safety with Anchor programs. |
-
-**Confidence:** MEDIUM for exact version numbers. Next.js 15 was released in Oct 2024; version 16 may exist by Feb 2026. Run `npm view next version` to confirm latest stable.
-
-### Wallet Connection
+### 1. Jupiter AMM SDK (`jupiter-amm-interface`) -- OFF-CHAIN ONLY
 
 | Technology | Version | Purpose | Why |
-|---|---|---|---|
-| @solana/wallet-adapter-react | ^0.15.x (verify) | React hooks for wallet connection | The established standard for Solana wallet integration. Provides `useWallet()`, `useConnection()`, `useAnchorWallet()` hooks. Works with web3.js v1. |
-| @solana/wallet-adapter-wallets | ^0.19.x (verify) | Wallet implementations (Phantom, Solflare, Backpack, etc.) | Bundles popular wallet adapters. Import only what you need to reduce bundle size. |
-| @solana/wallet-adapter-base | ^0.9.x (verify) | Base types and interfaces | Required peer dependency. Provides `WalletAdapter` interface. |
-| @solana/wallet-adapter-react-ui | ^0.9.x (verify) | Pre-built wallet modal UI | Optional -- provides `<WalletMultiButton>` and `<WalletModalProvider>`. Good for initial unstyled build; replace with custom UI later. |
+|------------|---------|---------|-----|
+| jupiter-amm-interface | 0.6.1 | Implement `Amm` trait for Jupiter routing | Required by Jupiter DEX integration program; this is the only path to get listed |
 
-**Why NOT `@solana/kit` / framework-kit:** These require `@solana/web3.js` v2 which is incompatible with `@coral-xyz/anchor` 0.32.1. The wallet-adapter ecosystem is mature, well-tested, and what the existing Solana DeFi world uses.
+**CRITICAL: This is an off-chain crate, NOT an on-chain dependency.**
 
-**Confidence:** MEDIUM for exact versions. The wallet-adapter packages are actively maintained. Verify with `npm view @solana/wallet-adapter-react version`.
+The `jupiter-amm-interface` does NOT compile to BPF. It runs in Jupiter's off-chain routing engine (Metis). Jupiter forks your SDK repo and runs it server-side to quote prices and build swap instructions. Your on-chain programs remain unchanged -- Jupiter constructs transactions that call your existing Tax Program instructions.
 
-### Embedded Wallet (Privy)
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| @privy-io/react-auth | ^2.x (verify with `npm view @privy-io/react-auth version`) | Embedded wallets + phone/email auth | Enables onboarding users who don't have Phantom/Solflare. Creates custodial wallets behind social login (phone, email, Google). Critical differentiator for memecoin audience. |
-
-**Integration pattern with wallet-adapter:**
-
-Privy and `@solana/wallet-adapter` serve complementary roles:
-- wallet-adapter handles standard browser extension wallets (Phantom, Solflare, Backpack)
-- Privy handles embedded wallets for users without extensions
-
-The recommended pattern is:
-1. Wrap the app with both `<PrivyProvider>` and `<WalletProvider>` (wallet-adapter)
-2. Create a unified `useProtocolWallet()` hook that abstracts both
-3. When Privy user connects, extract the Solana wallet from Privy and use it for transaction signing
-4. When standard wallet connects, use wallet-adapter's `useWallet()` directly
-
-**Confidence:** LOW for exact version and integration pattern. Privy's API may have changed significantly since training data. This needs phase-specific research with live docs at privy.io/docs before implementation.
-
-**Critical concern:** Privy embedded wallets may have limitations with VersionedTransaction v0 (which we need for sell paths). Verify that Privy's `signTransaction` supports v0 messages before committing to this integration.
-
-### Anchor Client (IDL Integration)
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| @coral-xyz/anchor | 0.32.1 (MUST match monorepo) | Transaction building from IDL types | Already installed. Program types generated in `target/types/`. The frontend imports these types and uses `anchor.Program<T>` to build typed transactions. |
-
-**How IDL integration works in the frontend:**
-
-The existing pattern in `scripts/deploy/lib/connection.ts` shows exactly how to load programs from IDL:
-
-```typescript
-import { Amm } from "../../../target/types/amm";
-const amm = new anchor.Program<Amm>(ammIdl, provider);
-// Now amm.methods.swapSolBuy(...).accountsStrict({...}).instruction() is fully typed
+**Architecture:**
+```
+Jupiter Metis Engine (off-chain, Rust)
+  -> loads your Amm trait impl (jupiter-amm-interface crate)
+  -> calls quote() to get price
+  -> calls get_swap_and_account_metas() to build IX
+  -> submits TX to Solana
+  -> TX calls your Tax Program's swap_sol_buy / swap_sol_sell (unchanged)
 ```
 
-For the frontend, the IDL JSON files from `target/idl/*.json` need to be copied or symlinked into the Next.js app. The type files from `target/types/*.ts` provide TypeScript types.
+**Dependency compatibility concern:** The crate uses Solana modular crates v3.x-4.x (`solana-pubkey` 4.0.0, `solana-account` 3.4.0). This is **NOT a problem** because:
+- The Jupiter SDK lives in a **separate Rust crate/workspace** from your on-chain programs
+- It never links against `solana-program` or `anchor-lang`
+- It only needs to know your program ID, account layouts, and instruction formats
+- You deserialize your `PoolState` and `EpochState` manually (from raw bytes), not via Anchor's `Account<>` derive
 
-**Monorepo integration approach:**
+**What you implement (the `Amm` trait):**
 
-```
-dr-fraudsworth/
-  programs/          # Existing Anchor programs
-  target/
-    idl/             # Generated IDL JSON (source of truth)
-    types/           # Generated TypeScript types
-  app/               # NEW: Next.js frontend
-    src/
-      idl/           # Copied or symlinked from target/idl/
-      types/         # Copied or symlinked from target/types/
-      lib/
-        anchor.ts    # Program loading (adapted from scripts/deploy/lib/connection.ts)
-```
+| Method | What it does |
+|--------|-------------|
+| `from_keyed_account()` | Deserialize your PoolState from account data |
+| `label()` | Return `"Dr Fraudsworth"` |
+| `program_id()` | Return Tax Program ID |
+| `key()` | Return pool address |
+| `get_reserve_mints()` | Return `[mint_a, mint_b]` from PoolState |
+| `get_accounts_to_update()` | Return pool + epoch_state addresses (for tax rates) |
+| `update()` | Cache deserialized pool reserves + current tax rates |
+| `quote()` | Compute output with constant-product math + tax deduction |
+| `get_swap_and_account_metas()` | Build full instruction accounts for `swap_sol_buy`/`swap_sol_sell` |
 
-**IMPORTANT:** The `@coral-xyz/anchor` version in the frontend package.json MUST be exactly 0.32.1 to match the IDL format generated by Anchor 0.32.1. Version mismatches between the CLI that generated the IDL and the client that reads it will cause silent deserialization failures.
+**New dependencies introduced (off-chain crate only):**
 
-**Confidence:** HIGH -- verified from existing `connection.ts` and `package.json`.
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| jupiter-amm-interface | 0.6.1 | Amm trait definition |
+| rust_decimal | 1.36.0 | Required by jupiter-amm-interface for `QuoteParams` |
+| serde / serde_json | 1.x | Serialization (already transitive) |
+| solana-pubkey | 4.0.0 | Pubkey type (jupiter's version) |
+| solana-account | 3.4.0 | KeyedAccount type |
+| solana-instruction | 3.1.0 | AccountMeta/Instruction types |
 
-### Charting
+**Confidence:** HIGH -- verified from [Cargo.toml on GitHub](https://github.com/jup-ag/jupiter-amm-interface/blob/main/Cargo.toml) via WebFetch. Verified this is purely off-chain from [DeepWiki analysis](https://deepwiki.com/jup-ag/jupiter-amm-interface) and [Jupiter DEX integration docs](https://dev.jup.ag/docs/routing/dex-integration).
 
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| lightweight-charts | ^4.x (verify with `npm view lightweight-charts version`) | TradingView-style OHLCV price charts | The standard for crypto price charts. Open source (Apache 2.0), maintained by TradingView. Small bundle (~45KB gzipped). Renders to HTML5 Canvas for performance. No React wrapper needed -- mount to a ref. |
+**Non-technical requirements for Jupiter listing:**
 
-**Integration pattern:**
-
-```typescript
-import { createChart } from 'lightweight-charts';
-
-// In a React component with useRef + useEffect:
-const chartRef = useRef<HTMLDivElement>(null);
-useEffect(() => {
-  const chart = createChart(chartRef.current!, { width, height });
-  const candleSeries = chart.addCandlestickSeries();
-  candleSeries.setData(ohlcvData); // from Postgres via API route
-  return () => chart.remove();
-}, []);
-```
-
-**Data source:** OHLCV data comes from Helius webhook indexing (see below), stored in Postgres, served via Next.js API routes.
-
-**Confidence:** MEDIUM for exact version. lightweight-charts v4 was the latest major at training cutoff. A v5 may exist.
-
-### On-Chain Event Indexing
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| Helius Webhooks (API) | N/A (REST API) | Index on-chain events into Postgres | Helius provides webhook subscriptions that POST transaction data to an endpoint when specified programs are invoked. No polling needed. We subscribe to our 5 program IDs and receive swap/epoch/staking events as they happen. |
-| helius-sdk | ^1.x (verify with `npm view helius-sdk version`) | Helius API client for webhook management | TypeScript SDK for creating/managing webhooks, enhanced transactions, DAS API. Optional -- can also use raw REST API. |
-
-**Webhook architecture:**
-
-1. Next.js API route at `/api/webhooks/helius` receives POST from Helius
-2. Parse transaction logs to extract swap amounts, prices, epoch transitions
-3. Compute OHLCV candles and write to Postgres
-4. Frontend fetches historical data from Postgres via API route
-5. Real-time updates via WebSocket or polling (see State Management section)
-
-**What to index:**
-- AMM `swap_sol_buy` / `swap_sol_sell` events: extract amounts for price calculation
-- Epoch `consume_randomness`: extract new epoch number, tax rates, cheap_side
-- Staking `deposit_rewards`: extract yield amounts
-- Carnage `execute_carnage_atomic`: extract rebalance details
-
-**Alternative considered:** Geyser plugins or custom RPC websocket subscriptions. These are more complex to operate and Helius webhooks are the standard approach for Solana DeFi indexing. The existing codebase already uses Helius for RPC (as evidenced by "Helius free tier" comments in rate limiting).
-
-**Confidence:** MEDIUM for SDK version. LOW for specific webhook payload format -- needs phase-specific research with Helius docs.
-
-### Database
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| PostgreSQL | 16.x (Railway provides this) | Store OHLCV candles, indexed events, user analytics | Required for historical price charts. Helius webhooks push events; API routes compute and store candles. Railway offers managed Postgres with automatic backups. |
-| Prisma | ^6.x (verify with `npm view prisma version`) | TypeScript ORM for Postgres | Type-safe database queries. Auto-generated types from schema. Migrations built-in. Industry standard for Next.js + Postgres. |
-
-**Why Prisma over raw SQL or Drizzle:**
-- Prisma has the best TypeScript integration and developer experience
-- Auto-generated client from schema means compile-time type safety
-- Migrations are declarative and reproducible
-- Railway has first-class Prisma support
-
-**Alternative considered:** Drizzle ORM is lighter weight and closer to SQL. Good choice if Prisma feels too heavy. Either works. Prisma recommended for its maturity and Railway integration.
-
-**Schema outline:**
-
-```prisma
-model OhlcvCandle {
-  id        Int      @id @default(autoincrement())
-  pool      String   // "CRIME/SOL", "FRAUD/SOL", etc.
-  interval  String   // "1m", "5m", "1h", "1d"
-  openTime  DateTime
-  open      Float
-  high      Float
-  low       Float
-  close     Float
-  volume    Float
-  txCount   Int
-  createdAt DateTime @default(now())
-
-  @@unique([pool, interval, openTime])
-  @@index([pool, interval, openTime])
-}
-
-model EpochEvent {
-  id            Int      @id @default(autoincrement())
-  epochNumber   Int
-  cheapSide     String   // "crime" | "fraud"
-  crimeBuyTax   Int      // basis points
-  fraudBuyTax   Int      // basis points
-  carnagePending Boolean
-  slot          BigInt
-  txSignature   String   @unique
-  timestamp     DateTime
-}
-```
-
-**Confidence:** MEDIUM for Prisma version. HIGH for Postgres choice (Railway documentation confirms managed Postgres).
-
-### State Management
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| @tanstack/react-query | ^5.x (verify) | Server state management, caching, refetching | Handles all RPC data fetching: account state, balances, epoch info. Built-in caching, refetch intervals, stale-while-revalidate. Eliminates manual loading/error states. |
-| zustand | ^5.x (verify) | Client-side state (UI state, transaction queue) | Lightweight store for UI-only state: selected pool, pending transactions, user preferences. Much simpler than Redux. No boilerplate. |
-
-**Why this combination:**
-- React Query handles "server state" (data from Solana RPC and Postgres API)
-- Zustand handles "client state" (which pool tab is selected, is the swap modal open)
-- They don't overlap or conflict
-- Both are lightweight and well-typed
-
-**What NOT to use:**
-- Redux / Redux Toolkit: Overkill for this app. Massive boilerplate for no benefit.
-- Jotai / Recoil: Fine alternatives to Zustand but less mainstream in the Solana ecosystem.
-- `useState` everywhere: Leads to prop drilling and duplicated fetch logic. React Query solves this.
-
-**Real-time data pattern:**
-
-```typescript
-// Poll EpochState every 30 seconds (epochs are ~5 min, no need for faster)
-const { data: epochState } = useQuery({
-  queryKey: ['epochState'],
-  queryFn: () => fetchEpochState(connection, epochStatePda),
-  refetchInterval: 30_000,
-});
-
-// Poll pool reserves every 10 seconds (for live price display)
-const { data: poolReserves } = useQuery({
-  queryKey: ['pool', poolName],
-  queryFn: () => fetchPoolReserves(connection, poolPda),
-  refetchInterval: 10_000,
-});
-```
-
-**Why polling over WebSocket subscriptions:**
-- Solana `connection.onAccountChange()` WebSocket subscriptions are unreliable on public/free tier RPC nodes (dropped connections, rate limits)
-- Polling with React Query's `refetchInterval` is simpler, more predictable, and handles errors gracefully
-- For the data we need (epoch state changes every ~5 min, prices change per swap), 10-30 second polling is more than adequate
-- If using Helius paid tier with reliable WebSocket, can upgrade to subscriptions later
-
-**Confidence:** MEDIUM for versions. HIGH for the pattern recommendation.
-
-### Styling
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| Tailwind CSS | ^4.x (verify with `npm view tailwindcss version`) | Utility-first CSS | Industry standard for React apps. Pairs well with Next.js (first-class support). Eliminates CSS file management. Co-locates styling with markup. The "functional but unstyled" milestone means layout and structure without polished visuals -- Tailwind is perfect for this because utility classes establish structure that can be refined later. |
-
-**Why NOT component libraries (Chakra, Mantine, shadcn/ui):**
-- This milestone is explicitly "functional but unstyled"
-- Component libraries impose design opinions we may not want
-- Tailwind gives structure without visual commitment
-- If we add shadcn/ui later, it builds on Tailwind (compatible)
-
-**Confidence:** MEDIUM for exact version. Tailwind v4 was in development at training cutoff; may or may not be the current stable. v3.4.x is safe fallback.
-
-### Deployment
-
-| Technology | Version | Purpose | Why |
-|---|---|---|---|
-| Railway | N/A (PaaS) | Next.js hosting + Postgres | Specified in project requirements. Supports Next.js (including API routes and SSR). Managed Postgres add-on. Automatic HTTPS. GitHub deploy integration. |
-
-**Railway deployment requirements:**
-
-1. **Build command:** `next build` (standard)
-2. **Start command:** `next start` (standard)
-3. **Environment variables:**
-   - `NEXT_PUBLIC_SOLANA_RPC_URL` -- Helius RPC endpoint (or public devnet for now)
-   - `NEXT_PUBLIC_SOLANA_CLUSTER` -- "devnet" or "mainnet-beta"
-   - `NEXT_PUBLIC_PRIVY_APP_ID` -- Privy application ID
-   - `HELIUS_API_KEY` -- Server-side only, for webhook management
-   - `HELIUS_WEBHOOK_SECRET` -- Server-side only, for webhook signature verification
-   - `DATABASE_URL` -- Postgres connection string (Railway provides this)
-4. **Postgres add-on:** Create via Railway dashboard, auto-injects `DATABASE_URL`
-5. **Root directory:** Set to `app/` in Railway if monorepo (Next.js lives in `app/` subdirectory)
-
-**Confidence:** MEDIUM. Railway's Next.js support is well-established but specific configuration may have changed.
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Security audit | DONE | 5 audits completed, OtterSec verified |
+| Code health | GOOD | Open source on GitHub |
+| Market traction | PENDING | Need live trading volume data |
+| Team & backers | PENDING | Jupiter evaluates this |
+| Fork permission | REQUIRED | Must allow Jupiter to fork SDK repo |
+| No network calls | REQUIRED | All quoting from cached accounts only |
+| Market quality | REQUIRED | <30% price diff on $500 round-trip, <20% impact $500-$1000 |
 
 ---
 
-## Monorepo Structure
+### 2. USDC Pool Support -- NO NEW DEPENDENCIES
 
-The frontend app lives alongside the existing Anchor project. **Do NOT create a separate repository.**
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| (none new) | -- | USDC is standard SPL Token, same as WSOL | Existing `MixedPool` type already handles T22+SPL pairs |
 
-```
-dr-fraudsworth/                    # Existing project root
-  Anchor.toml                      # Existing
-  Cargo.toml                       # Existing workspace
-  package.json                     # Existing (root) -- Anchor/test dependencies
-  tsconfig.json                    # Existing (root) -- test/script TypeScript config
-  programs/                        # Existing Anchor programs
-  target/
-    idl/                           # Generated IDL JSON
-    types/                         # Generated TypeScript types
-  tests/                           # Existing Anchor tests
-  scripts/                         # Existing deployment/e2e scripts
-  keypairs/                        # Existing keypairs (gitignored)
-  app/                             # NEW: Next.js frontend
-    package.json                   # Frontend-specific dependencies
-    tsconfig.json                  # Frontend TypeScript config (separate from root)
-    next.config.ts                 # Next.js configuration
-    tailwind.config.ts             # Tailwind configuration
-    postcss.config.mjs             # PostCSS config (Tailwind needs this)
-    prisma/
-      schema.prisma                # Database schema
-    src/
-      app/                         # Next.js App Router pages
-        layout.tsx                 # Root layout with providers
-        page.tsx                   # Home page
-        api/
-          webhooks/
-            helius/
-              route.ts             # Helius webhook receiver
-          candles/
-            route.ts               # OHLCV data API
-      components/                  # React components
-      hooks/                       # Custom hooks (useProtocolWallet, useSwap, etc.)
-      lib/
-        anchor.ts                  # Anchor program loading (adapted from scripts/deploy/lib/connection.ts)
-        pda.ts                     # PDA derivation (adapted from scripts/deploy/lib/pda-manifest.ts)
-        transactions/
-          swap.ts                  # Swap TX building (adapted from scripts/e2e/lib/swap-flow.ts)
-          stake.ts                 # Stake TX building (adapted from scripts/e2e/lib/staking-flow.ts)
-          alt.ts                   # ALT/v0 TX helper (adapted from scripts/e2e/lib/alt-helper.ts)
-      idl/                         # Copied from target/idl/ (build step)
-      types/                       # Copied from target/types/ (build step)
-      stores/                      # Zustand stores
-```
+**USDC is an SPL Token (NOT Token-2022).**
 
-**Why `app/` subdirectory instead of mixing with root:**
-1. Separate `package.json` avoids dependency conflicts (Next.js wants React 19, Anchor tests don't use React at all)
-2. Separate `tsconfig.json` lets the frontend use `"jsx": "react-jsx"` and `"module": "esnext"` while the root uses `"module": "commonjs"` for Anchor tests
-3. Railway can point to the `app/` directory specifically
-4. `anchor build` and `anchor test` are unaffected by the frontend directory
+USDC mint: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`, owned by `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` (original SPL Token program).
 
-**IDL sync build step:**
+**This means USDC pools work exactly like SOL pools architecturally:**
+- Pool type: `MixedPool` (CRIME=T22 + USDC=SPL, FRAUD=T22 + USDC=SPL)
+- Transfer routing: Same as SOL pools -- T22 transfer_checked for CRIME/FRAUD, SPL transfer for USDC
+- Transfer hooks: Fire on the T22 side (CRIME/FRAUD), no hook on USDC side -- identical to SOL pools
+- Whitelist: Same ExtraAccountMetaList resolution as SOL pools
 
-Add a script to `app/package.json`:
+**What DOES change (program-level, no new deps):**
 
-```json
-{
-  "scripts": {
-    "sync-idl": "cp ../target/idl/*.json src/idl/ && cp ../target/types/*.ts src/types/",
-    "prebuild": "npm run sync-idl",
-    "dev": "npm run sync-idl && next dev",
-    "build": "next build"
-  }
-}
-```
+| Change | Where | Why |
+|--------|-------|-----|
+| New pool initialization | AMM `initialize_pool` | Create CRIME/USDC and FRAUD/USDC pools |
+| New Tax Program swap instructions | Tax Program | `swap_usdc_buy`, `swap_usdc_sell` (mirror SOL versions but with USDC ATA, no WSOL wrap/unwrap) |
+| Tax distribution in USDC | Tax Program | 75% staking, 24% carnage, 1% treasury -- but denominated in USDC not SOL |
+| Staking escrow USDC account | Staking Program | Needs USDC escrow ATA alongside SOL escrow |
+| Carnage fund USDC vault | Epoch Program | Carnage buys/sells from USDC pools too |
+| Price oracle for USDC/SOL | Client-side | Need SOL/USD price to normalize yields across SOL and USDC pools |
 
-This ensures IDL types are always current with the latest `anchor build` output.
+**Key architectural decision needed:** Does the staking yield stay dual-denominated (SOL yield from SOL pools, USDC yield from USDC pools), or is everything converted to a single denomination? This is a design decision, not a stack decision. The programs can handle either.
+
+**The biggest difference vs SOL pools: no WSOL wrap/unwrap.** SOL pools require wrapping native SOL into WSOL (SPL Token) before swapping and unwrapping after. USDC is already an SPL Token, so swaps are simpler -- standard SPL Token transfers, no sync_native or close-account dance.
+
+**No new Rust crates needed.** `anchor-spl` already has all SPL Token transfer helpers. USDC uses the standard SPL Token program which is already imported.
+
+**Confidence:** HIGH -- USDC mint program verified via [Solana token documentation](https://solana.com/docs/tokens). AMM `PoolState` and `PoolType::MixedPool` verified from source code at `programs/amm/src/state/pool.rs`.
 
 ---
 
-## Frontend package.json
+### 3. Switchboard Gateway Failover -- NO NEW ON-CHAIN DEPENDENCIES
 
-```json
-{
-  "name": "dr-fraudsworth-app",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "sync-idl": "cp ../target/idl/*.json src/idl/ && cp ../target/types/*.ts src/types/",
-    "prebuild": "npm run sync-idl",
-    "dev": "npm run sync-idl && next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "db:push": "prisma db push",
-    "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
-  },
-  "dependencies": {
-    "next": "^15",
-    "react": "^19",
-    "react-dom": "^19",
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| (none new on-chain) | -- | Gateway failover is purely client-side | On-chain `switchboard-on-demand =0.11.3` stays pinned |
+| @switchboard-xyz/on-demand (JS) | ^3.7.3 (existing) | Already installed, has retry macros | No version change needed |
 
-    "@coral-xyz/anchor": "0.32.1",
-    "@solana/web3.js": "^1.95.5",
-    "@solana/spl-token": "^0.4.9",
+**The problem and solution are entirely client-side (crank scripts).**
 
-    "@solana/wallet-adapter-base": "^0.9",
-    "@solana/wallet-adapter-react": "^0.15",
-    "@solana/wallet-adapter-react-ui": "^0.9",
-    "@solana/wallet-adapter-wallets": "^0.19",
+Current behavior (from `scripts/vrf/lib/vrf-flow.ts`):
+1. `randomness.revealIx()` contacts the oracle's assigned gateway
+2. If gateway is down, exponential backoff retry (3s, 6s, 9s) up to `maxAttempts`
+3. If all attempts fail, falls through to VRF timeout recovery
+4. Timeout recovery creates fresh randomness (may get a different oracle/gateway)
 
-    "@privy-io/react-auth": "^2",
+**Why gateway rotation does NOT work (already documented in MEMORY.md):**
+Each randomness account is assigned to a specific oracle during commit. The reveal verifies that oracle's signature on-chain. Alternative gateways serve different oracles, so their signatures fail verification (error `0x1780`). Only the assigned oracle's gateway can produce a valid reveal.
 
-    "@tanstack/react-query": "^5",
-    "zustand": "^5",
+**What CAN be improved (no new deps):**
 
-    "lightweight-charts": "^4",
+| Improvement | Where | How |
+|-------------|-------|-----|
+| Pre-check gateway health before commit | `vrf-flow.ts` | HTTP HEAD to gateway URL before creating randomness; if down, delay epoch transition |
+| Oracle selection awareness | `vrf-flow.ts` | After `Randomness.create()`, check which oracle was assigned; log it for monitoring |
+| Faster timeout recovery | `vrf-flow.ts` | Reduce `VRF_TIMEOUT_SLOTS` from 300 to minimum safe value; create fresh randomness sooner |
+| Multiple randomness pre-creation | `vrf-flow.ts` | Create 2-3 randomness accounts, pick the one assigned to a healthy oracle |
+| Gateway health monitoring | New script | Periodic pings to known gateways, alerting when one goes down |
 
-    "@prisma/client": "^6",
+**The multi-randomness approach is the most robust failover:**
+1. Create 2-3 randomness accounts (each gets assigned an oracle)
+2. Check which gateways are healthy
+3. Commit with the randomness that has a healthy oracle
+4. If commit succeeds but reveal fails, fall through to timeout recovery as today
 
-    "bs58": "^5"
-  },
-  "devDependencies": {
-    "typescript": "^5.3",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+**Cost:** Each randomness account creation costs ~0.008 SOL rent (reclaimable). Creating 2-3 per epoch and closing the unused ones is negligible cost given the existing rent reclaim infrastructure.
 
-    "tailwindcss": "^4",
-    "postcss": "^8",
+**No Rust crate changes needed.** The on-chain epoch program accepts any valid randomness account -- it doesn't care which oracle was assigned. All failover logic is in the TypeScript crank.
 
-    "prisma": "^6",
-
-    "eslint": "^9",
-    "eslint-config-next": "^15"
-  }
-}
-```
-
-**IMPORTANT VERSION NOTES:**
-- `@coral-xyz/anchor` is pinned to EXACTLY 0.32.1 (no caret). This MUST match the Anchor CLI version that generated the IDLs.
-- `@solana/web3.js` uses `^1.95.5` to stay on v1.x. Do NOT allow v2.x.
-- All `@solana/wallet-adapter-*` versions are approximate and MUST be verified with `npm view` before installing. The wallet-adapter ecosystem may have had breaking changes.
-- Privy version is LOW confidence. Check privy.io/docs for current SDK version.
+**Confidence:** HIGH -- Verified from source code in `scripts/vrf/lib/vrf-flow.ts` lines 234-276. Gateway rotation impossibility confirmed by project memory (MEMORY.md) and on-chain behavior.
 
 ---
 
-## Frontend tsconfig.json
+### 4. Vault Convert-All -- NO NEW DEPENDENCIES
 
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      { "name": "next" }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
-}
-```
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| (none new) | -- | Pure instruction logic change | Sentinel value `amount_in=0` triggers balance read |
 
-**Key differences from root tsconfig:**
-- `"module": "esnext"` instead of `"commonjs"` (Next.js uses ESM)
-- `"jsx": "preserve"` (Next.js handles JSX compilation)
-- `"moduleResolution": "bundler"` (Next.js bundler resolution)
-- `"strict": true` (tighter than root's `"strict": false` -- better for new code)
-- Path alias `@/*` for clean imports
+**This is a small on-chain logic change, not a stack change.**
 
----
+Per the proposal at `Docs/vault-convert-all-proposal.md`:
+- Add `minimum_output: u64` parameter to `convert` instruction
+- When `amount_in == 0`, read `user_input_account.amount` on-chain
+- Add `VaultError::SlippageExceeded` error variant
+- No new imports, no new crates, no new accounts
 
-## Reusable Code from Existing Scripts
+**Existing dependencies are sufficient:**
+- `anchor-spl` token_2022 feature already provides `InterfaceAccount<TokenAccount>` which exposes `.amount`
+- `anchor-lang` `require!()` macro handles the slippage guard
+- No additional Solana SDK crates needed
 
-The existing e2e scripts contain battle-tested patterns that the frontend should adapt (not copy-paste -- adapt for browser context):
+**The instruction signature changes from 1 to 2 parameters, which is a breaking IDL change.** All callers (client multi-hop builder, test scripts) must update simultaneously.
 
-| Existing Script | Frontend Adaptation | What Changes |
-|---|---|---|
-| `scripts/deploy/lib/connection.ts` | `app/src/lib/anchor.ts` | Replace file-based wallet loading with wallet-adapter's `useAnchorWallet()`. Replace file-based IDL loading with JSON import. |
-| `scripts/deploy/lib/pda-manifest.ts` | `app/src/lib/pda.ts` | Keep PDA derivation logic. Remove file I/O. Export derivation functions for use in hooks. |
-| `scripts/e2e/lib/swap-flow.ts` | `app/src/lib/transactions/swap.ts` | Keep instruction building. Remove logging infrastructure. Return `TransactionInstruction[]` instead of sending directly. Let wallet-adapter handle signing. |
-| `scripts/e2e/lib/alt-helper.ts` | `app/src/lib/transactions/alt.ts` | Keep ALT loading and v0 message compilation. Remove ALT creation (already exists on devnet). Hardcode or fetch ALT address from config. |
-| `scripts/e2e/lib/staking-flow.ts` | `app/src/lib/transactions/stake.ts` | Keep instruction building. Remove test-specific token minting. |
-| `scripts/e2e/lib/carnage-flow.ts` | Not needed in frontend | Carnage is bot-operated (overnight runner), not user-initiated. Frontend only displays Carnage results. |
-
-**Critical browser considerations:**
-1. No `fs` module -- IDLs must be bundled as JSON imports
-2. No `Keypair.fromSecretKey` -- wallet-adapter provides signing
-3. `sendV0Transaction` pattern must be adapted to use wallet-adapter's `signTransaction` + `connection.sendRawTransaction`
-4. Rate limiting (`RPC_DELAY_MS`) is less relevant in frontend (one user, not batch operations)
-
----
-
-## What NOT to Add
-
-| Technology | Why NOT |
-|---|---|
-| `@solana/web3.js` v2 / `@solana/kit` / `@solana/client` / `@solana/react-hooks` | Incompatible with `@coral-xyz/anchor` 0.32.1. Would require rewriting all program interaction code. The skill file `frontend-framework-kit.md` documents the v2 ecosystem but we cannot use it. |
-| Redux / MobX / XState | Overkill. React Query + Zustand covers all state management needs with minimal boilerplate. |
-| GraphQL / Apollo | No GraphQL API exists. Helius webhooks push data; we serve it via REST API routes. GraphQL adds complexity for no benefit. |
-| Socket.io / Pusher | Unnecessary real-time infrastructure. React Query polling at 10-30s intervals is sufficient for DeFi dashboard. WebSocket subscriptions can be added later if needed. |
-| Chakra UI / Mantine / Material UI | This milestone is "functional but unstyled." Component libraries impose design opinions. Tailwind provides structure without visual commitment. |
-| Docker | Not needed for Railway deployment. Railway builds from source directly. Docker adds local dev complexity for no benefit in this context. |
-| Turborepo / Nx / pnpm workspaces | The monorepo has only 2 packages (root + app/). A monorepo tool adds configuration overhead that isn't justified for 2 packages. Simple `npm` in each directory is sufficient. |
-| Web3Auth / Magic | Privy is the chosen embedded wallet solution. Don't add competing auth solutions. |
-| Jupiter SDK / Orca SDK | We have our own AMM. These are for interacting with other AMMs on Solana. Not relevant. |
+**Confidence:** HIGH -- Verified from vault proposal doc and `programs/conversion-vault/Cargo.toml` source.
 
 ---
 
 ## Alternatives Considered
 
-| Category | Recommended | Alternative | Why Not Alternative |
-|---|---|---|---|
-| Framework | Next.js 15 | Vite + React | Next.js provides API routes (needed for webhooks), SSR (needed for SEO/sharing), and Railway has first-class support. Vite would require a separate backend for webhook endpoints. |
-| Wallet connection | @solana/wallet-adapter | Custom WalletStandard integration | wallet-adapter is the established abstraction. No need to reinvent. |
-| ORM | Prisma | Drizzle ORM | Drizzle is lighter and closer to SQL, which is nice. But Prisma has better Railway integration and is more widely used in the Next.js ecosystem. Either would work. |
-| Charting | lightweight-charts | recharts / Highcharts / Apache ECharts | lightweight-charts is purpose-built for financial OHLCV charts. Other charting libraries are general-purpose and don't have candlestick/volume charts as first-class features. |
-| State management | React Query + Zustand | React Query + Context | Zustand is more ergonomic than Context for complex client state. Context causes unnecessary re-renders. |
-| Styling | Tailwind CSS | CSS Modules / styled-components | Tailwind co-locates styling with markup, which is faster for rapid iteration. CSS Modules fragment styling across files. styled-components has runtime cost. |
-| Database | Postgres (Railway) | SQLite / Turso | Postgres is the standard for production web apps. SQLite is for embedded use cases, not multi-connection web servers. |
-| Hosting | Railway | Vercel / Fly.io | Railway was specified in the project requirements. Vercel would also work (excellent Next.js support) but project specifies Railway. |
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Jupiter integration | jupiter-amm-interface 0.6.1 (off-chain crate) | Jupiter Ultra V3 API (HTTP) | Jupiter requires the Rust Amm trait for DEX listing in Metis; API is for consumers, not providers |
+| USDC transfers | Standard SPL Token (anchor-spl) | Token-2022 USDC | USDC is SPL Token, not T22. No choice here. |
+| VRF failover | Multi-randomness pre-creation + gateway health check | Switch to different oracle network | Switchboard is the only VRF provider on Solana; no alternative exists |
+| Vault convert-all | Sentinel value (amount_in=0) | New `convert_v2` instruction | Sentinel is simpler, backwards-compatible for `amount_in > 0`, and 0 was already an error |
 
 ---
 
-## Version Verification Checklist
+## What NOT to Add
 
-**Before installing dependencies, run these commands to get current versions:**
+| Temptation | Why Not |
+|------------|---------|
+| `jupiter-core` or `jup-ag` Rust crate | These are Jupiter internals, not for DEX integrators |
+| `solana-sdk` v3.x in on-chain programs | Anchor 0.32.1 requires solana-program 2.x; mixing versions breaks BPF compilation |
+| `spl-token` in on-chain deps | Already have `anchor-spl` which wraps it; adding both causes duplicate types |
+| Pyth/Chainlink price feeds | Not needed yet; USDC is $1 stable, SOL/USD price only needed client-side for display |
+| `rust_decimal` in on-chain programs | BPF has no float; your existing u128 checked math is correct and more efficient |
+| New oracle crate for gateway failover | The problem is client-side, not on-chain |
+| Anchor 0.33+ upgrade | Not needed for these features; would require re-testing all 6 programs |
+
+---
+
+## Installation
+
+### Jupiter SDK (new separate crate)
 
 ```bash
-export PATH="/opt/homebrew/bin:$PATH"
+# Create new crate in workspace (NOT in programs/)
+mkdir -p sdk/jupiter-adapter
+cd sdk/jupiter-adapter
+cargo init --lib
 
-# Core framework
-npm view next version
-npm view react version
-
-# Wallet adapter
-npm view @solana/wallet-adapter-react version
-npm view @solana/wallet-adapter-wallets version
-npm view @solana/wallet-adapter-base version
-npm view @solana/wallet-adapter-react-ui version
-
-# Privy
-npm view @privy-io/react-auth version
-
-# Data management
-npm view @tanstack/react-query version
-npm view zustand version
-
-# Charting
-npm view lightweight-charts version
-
-# Database
-npm view prisma version
-npm view @prisma/client version
-
-# Indexing
-npm view helius-sdk version
-
-# Styling
-npm view tailwindcss version
-
-# Verify Anchor client compatibility
-npm view @coral-xyz/anchor version
+# Add to workspace Cargo.toml members (NOT in programs/* glob)
+# members = ["programs/*", "tests/cross-crate", "sdk/jupiter-adapter"]
 ```
 
-Update the `package.json` versions above with the actual current versions before installing.
+```toml
+# sdk/jupiter-adapter/Cargo.toml
+[package]
+name = "drfraudsworth-jupiter"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85.0"
+
+[dependencies]
+jupiter-amm-interface = "0.6.1"
+rust_decimal = "1.36.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+solana-pubkey = "4.0.0"
+solana-account = { version = "3.4.0", features = ["serde"] }
+solana-instruction = "3.1.0"
+solana-clock = "3.0.0"
+solana-program-error = "3.0.0"
+anyhow = "1"
+```
+
+### USDC Pools
+```bash
+# No new packages. USDC uses existing anchor-spl SPL Token support.
+```
+
+### Gateway Failover
+```bash
+# No new packages. Improvements are TypeScript changes to scripts/vrf/lib/vrf-flow.ts.
+```
+
+### Vault Convert-All
+```bash
+# No new packages. Changes to programs/conversion-vault/src/instructions/convert.rs only.
+```
 
 ---
 
-## Compatibility Matrix
+## Workspace Isolation Strategy
 
-| Package A | Version | Compatible With | Notes |
-|---|---|---|---|
-| @coral-xyz/anchor (TS) | 0.32.1 | @solana/web3.js 1.x | MUST stay on v1.x. v2 is incompatible. |
-| @solana/wallet-adapter-react | ^0.15.x | @solana/web3.js 1.x | Uses v1 internally. |
-| @solana/wallet-adapter-react | ^0.15.x | React 18 or 19 | Verify React 19 compatibility before installing. May need ^0.16+ for React 19. |
-| Next.js | ^15.x | React 19 | Next.js 15 ships with React 19 support. |
-| @privy-io/react-auth | ^2.x | React 18 or 19 | VERIFY React 19 compatibility. May be an issue. |
-| lightweight-charts | ^4.x | React 18/19 | Framework-agnostic (canvas-based). No React dependency. |
-| Prisma | ^6.x | Node.js 18+ | Railway runs Node 18+. |
-| @tanstack/react-query | ^5.x | React 18 or 19 | React 19 compatible. |
+The Jupiter adapter MUST be in a separate workspace member (e.g., `sdk/jupiter-adapter`), NOT inside `programs/`. Reasons:
 
-**React 19 risk:** Several packages in the Solana ecosystem may not yet support React 19 (wallet-adapter, Privy). If compatibility issues arise, use Next.js 14 with React 18. This is a safe fallback. Research this during phase implementation.
+1. **Different Solana SDK versions**: On-chain programs use `solana-program` 2.2 via Anchor 0.32.1. Jupiter SDK uses modular Solana crates 3.x-4.x. These cannot coexist in the same compilation unit.
+2. **Different compilation targets**: On-chain = BPF/SBF. Jupiter SDK = native x86_64.
+3. **Jupiter forks your repo**: They need to build just the SDK crate, not your entire program workspace.
 
-**Confidence:** MEDIUM for compatibility claims. These need live verification.
+Cargo workspace resolver 2 handles the version split correctly as long as the crates are in separate workspace members that don't depend on each other.
+
+---
+
+## Net Impact Summary
+
+| Feature | New Rust Crates | New JS Packages | On-Chain Changes | Off-Chain Changes |
+|---------|----------------|-----------------|------------------|-------------------|
+| Jupiter SDK | 7 (off-chain only, separate crate) | 0 | NONE | New `sdk/jupiter-adapter/` crate |
+| USDC Pools | 0 | 0 | AMM + Tax + Staking + Epoch | Frontend pool routing + display |
+| Gateway Failover | 0 | 0 | NONE | `vrf-flow.ts` improvements |
+| Vault Convert-All | 0 | 0 | Conversion Vault only | Multi-hop builder + swap builders |
+
+**Total new on-chain dependencies: ZERO.** All four features use existing crates. The only new Rust dependency is `jupiter-amm-interface` in an isolated off-chain crate.
 
 ---
 
 ## Sources
 
-| Source | Confidence | What It Informed |
-|---|---|---|
-| `node_modules/@coral-xyz/anchor/package.json` (installed v0.32.1) | HIGH | Anchor v1 web3.js dependency lock |
-| `node_modules/@solana/web3.js/package.json` (installed v1.98.4) | HIGH | Current web3.js version in monorepo |
-| `node_modules/@solana/spl-token/package.json` (installed v0.4.14) | HIGH | Token program client version |
-| `scripts/deploy/lib/connection.ts` (project code) | HIGH | IDL loading pattern for frontend adaptation |
-| `scripts/e2e/lib/swap-flow.ts` (project code) | HIGH | Swap instruction building pattern |
-| `scripts/e2e/lib/alt-helper.ts` (project code) | HIGH | VersionedTransaction v0 + ALT pattern |
-| `scripts/e2e/lib/staking-flow.ts` (project code) | HIGH | Staking instruction building pattern |
-| `scripts/e2e/lib/user-setup.ts` (project code) | HIGH | Token account creation pattern |
-| `.claude/skills/solana-dev/frontend-framework-kit.md` (skill file) | MEDIUM | Documents v2 ecosystem (NOT usable, but informative for context) |
-| `.planning/research/STACK.md` (v0.7 research) | HIGH | Existing version compatibility matrix |
-| Training data: Next.js, wallet-adapter, Privy, React Query, Zustand, Tailwind, Prisma, lightweight-charts | MEDIUM | Library selection and version ranges. May be 6-18 months stale. |
-| Training data: Railway deployment patterns | MEDIUM | Deployment configuration |
-| Training data: Helius webhook API | LOW | Webhook architecture. Needs live docs verification. |
-
----
-
-## Summary for Roadmap
-
-**The frontend stack is straightforward and well-established in the Solana ecosystem.** The key decisions are:
-
-1. **web3.js v1, NOT v2:** Locked by Anchor 0.32.1. This is non-negotiable. Ignore the framework-kit skill file.
-2. **Reuse existing patterns:** The scripts in `scripts/e2e/lib/` contain battle-tested transaction building code. Adapt for browser context, don't rewrite from scratch.
-3. **Next.js in `app/` subdirectory:** Keeps frontend isolated from Anchor build toolchain. Separate package.json and tsconfig.
-4. **React Query for RPC state, Zustand for UI state:** Clean separation. No Redux complexity.
-5. **Privy needs careful validation:** Embedded wallets + VersionedTransaction v0 compatibility is the highest-risk integration point. Research during implementation phase.
-6. **Helius webhooks for indexing:** Standard pattern for Solana DeFi. Next.js API routes receive webhook POSTs, write to Postgres.
-
-**Riskiest decisions:**
-- Privy + v0 transaction compatibility (must verify)
-- React 19 compatibility with wallet-adapter and Privy (may need React 18 fallback)
-- Exact library versions (all marked as needing npm verification)
-
-**Safest decisions:**
-- Next.js as framework (industry standard)
-- wallet-adapter for standard wallets (universal in Solana ecosystem)
-- Tailwind for styling (no design commitment yet)
-- React Query for data fetching (well-established pattern)
-- Prisma + Postgres for chart data (boring technology, which is good)
+- [jupiter-amm-interface Cargo.toml (v0.6.1)](https://github.com/jup-ag/jupiter-amm-interface/blob/main/Cargo.toml) -- verified dependency versions via WebFetch (HIGH confidence)
+- [Jupiter DEX Integration Guide](https://dev.jup.ag/docs/routing/dex-integration) -- listing requirements (MEDIUM confidence, WebSearch summary)
+- [jupiter-amm-implementation README](https://github.com/jup-ag/jupiter-amm-implementation/blob/main/README.md) -- SDK structure reference (HIGH confidence)
+- [jupiter-amm-interface crates.io](https://crates.io/crates/jupiter-amm-interface) -- current version 0.6.1 (HIGH confidence)
+- [Switchboard on-demand crate](https://crates.io/crates/switchboard-on-demand) -- v0.11.3, anchor-lang >=0.31.0 (HIGH confidence)
+- [Switchboard on-demand docs.rs](https://docs.rs/switchboard-on-demand/latest/switchboard_on_demand/) -- retry macros exist (MEDIUM confidence)
+- [USDC mint program](https://solana.com/docs/tokens) -- USDC is SPL Token, not T22 (HIGH confidence)
+- [Transfer Hook guide](https://solana.com/developers/guides/token-extensions/transfer-hook) -- CPI and re-entrancy constraints (HIGH confidence)
+- Project source: `programs/amm/src/state/pool.rs` -- PoolType::MixedPool handles T22+SPL (HIGH confidence)
+- Project source: `scripts/vrf/lib/vrf-flow.ts` -- gateway retry and timeout recovery (HIGH confidence)
+- Project source: `Docs/vault-convert-all-proposal.md` -- convert-all design (HIGH confidence)
+- Project source: `programs/conversion-vault/Cargo.toml` -- current deps (HIGH confidence)
+- Project MEMORY.md -- VRF gateway rotation impossibility documented (HIGH confidence)

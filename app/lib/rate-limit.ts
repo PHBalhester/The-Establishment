@@ -71,6 +71,24 @@ export const CARNAGE_EVENTS_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 60,
 };
 
+/** /api/health -- Railway probes ~1/min; 30/min generous for monitoring */
+export const HEALTH_RATE_LIMIT: RateLimitConfig = {
+  windowMs: 60_000,
+  maxRequests: 30,
+};
+
+/** /api/rpc sendTransaction -- normal user: 1-2/min (one per swap) */
+export const SEND_TX_RATE_LIMIT: RateLimitConfig = {
+  windowMs: 60_000,
+  maxRequests: 10,
+};
+
+/** /api/rpc simulateTransaction -- normal user: 1-2 per swap attempt (wallet preview) */
+export const SIMULATE_TX_RATE_LIMIT: RateLimitConfig = {
+  windowMs: 60_000,
+  maxRequests: 20,
+};
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------

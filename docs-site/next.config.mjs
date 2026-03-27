@@ -11,13 +11,15 @@ const nextConfig = {
     return [{
       source: '/:path*',
       headers: [
-        // Allow framing from the main app (required for DocsStation iframe).
-        // X-Frame-Options: SAMEORIGIN does NOT work here because different
-        // ports = different origins (localhost:3000 ≠ localhost:3001).
-        // CSP frame-ancestors allows specifying multiple origins.
+        // Comprehensive CSP for the Nextra docs site.
+        // - frame-ancestors: production HTTPS domains only (no localhost/Railway dev URLs)
+        // - unsafe-inline kept for script-src and style-src (Nextra/Pagefind compatibility)
+        // - connect-src 'self' allows Pagefind search fetches
+        // - object-src 'none' blocks Flash/Java plugin embeds
+        // - base-uri 'self' prevents base tag injection
         {
           key: 'Content-Security-Policy',
-          value: 'frame-ancestors http://localhost:3000 http://localhost:3001 https://dr-fraudsworth-production.up.railway.app https://fraudsworth.fun https://www.fraudsworth.fun https://docs.fraudsworth.fun',
+          value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors https://fraudsworth.fun https://www.fraudsworth.fun https://docs.fraudsworth.fun",
         },
       ],
     }];

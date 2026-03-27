@@ -36,7 +36,7 @@ Verified:
 
 **NEW observation**: `.env.devnet` is tracked in git and contains:
   - `HELIUS_API_KEY=[REDACTED-DEVNET-HELIUS-KEY]`
-  - `SUPERMEMORY_CC_API_KEY=[REDACTED-SUPERMEMORY]-...`
+  - `SUPERMEMORY_CC_API_KEY=[REDACTED-SUPERMEMORY-KEY]...`
   - `CLUSTER_URL` with embedded API key
 
   The file header says "devnet credentials are non-sensitive" which is a judgment call. Helius devnet API keys have rate limits but are free-tier; however, if abused they could exhaust the project's devnet RPC allowance. This was not flagged in the original H005 but falls under the same category of secrets-in-git.

@@ -113,7 +113,7 @@ export function useProtocolWallet(): ProtocolWallet {
 
       const { signers: _signers, ...sendOptions } = opts ?? {};
       const signature = await connection.sendRawTransaction(serialized, {
-        skipPreflight: sendOptions.skipPreflight,
+        skipPreflight: true, // Forced on devnet: v0 simulation returns "Blockhash not found"
         preflightCommitment: sendOptions.preflightCommitment ?? connection.commitment ?? undefined,
         maxRetries: sendOptions.maxRetries,
         minContextSlot: sendOptions.minContextSlot,

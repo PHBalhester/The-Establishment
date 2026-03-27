@@ -35,9 +35,9 @@ severity_breakdown: {critical: 0, high: 1, medium: 3, low: 3}
 
 1. **No client-side storage cleanup on wallet disconnect**: Both `WalletButton.tsx:54-59` and `SettingsStation.tsx:58-66` call `disconnect()` without clearing localStorage. Settings persist across wallet sessions. Not exploitable in current context (settings contain only slippage/volume preferences, no auth tokens or PII), but violates defense-in-depth. -- `app/components/wallet/WalletButton.tsx:54`, `app/components/station/SettingsStation.tsx:58`
 
-2. **Helius API key hardcoded in shared package, bundled into client**: `DEVNET_RPC_URL` in `shared/programs.ts:21-22` embeds the Helius API key `[REDACTED-DEVNET-KEY]-...`. This is imported by `app/lib/connection.ts:33` and `app/providers/providers.tsx:35` as the RPC URL fallback, placing the key in the client-side JavaScript bundle. Currently devnet/free-tier, but the same pattern would leak a paid mainnet key. -- `shared/programs.ts:22`, `app/lib/connection.ts:33`
+2. **Helius API key hardcoded in shared package, bundled into client**: `DEVNET_RPC_URL` in `shared/programs.ts:21-22` embeds the Helius API key `[REDACTED-DEVNET-KEY]...`. This is imported by `app/lib/connection.ts:33` and `app/providers/providers.tsx:35` as the RPC URL fallback, placing the key in the client-side JavaScript bundle. Currently devnet/free-tier, but the same pattern would leak a paid mainnet key. -- `shared/programs.ts:22`, `app/lib/connection.ts:33`
 
-3. **`NEXT_PUBLIC_RPC_URL` in `.env.local` contains API key**: The env var `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...` is client-exposed by design (NEXT_PUBLIC_ prefix). Same key as #2 but via a second path. -- `app/.env.local:1`
+3. **`NEXT_PUBLIC_RPC_URL` in `.env.local` contains API key**: The env var `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...` is client-exposed by design (NEXT_PUBLIC_ prefix). Same key as #2 but via a second path. -- `app/.env.local:1`
 
 4. **localStorage stores only non-sensitive user preferences**: Settings stored under key `dr-fraudsworth-settings` contain slippage BPS, priority fee preset, muted boolean, and volume integer. No auth tokens, no wallet keys, no PII. Validation on load is thorough (type checks, range bounds, enum allowlist). -- `app/providers/SettingsProvider.tsx:88-130`
 
@@ -82,7 +82,7 @@ severity_breakdown: {critical: 0, high: 1, medium: 3, low: 3}
 
 ## Cross-Focus Handoffs
 
-- -> **SEC-02**: Helius API key `[REDACTED-DEVNET-KEY]-...` hardcoded in `shared/constants.ts:474` and `shared/programs.ts:22`, exposed in client bundle. Needs assessment of whether this key has permissions beyond RPC (webhook management is confirmed in `shared/constants.ts:471` comment).
+- -> **SEC-02**: Helius API key `[REDACTED-DEVNET-KEY]...` hardcoded in `shared/constants.ts:474` and `shared/programs.ts:22`, exposed in client bundle. Needs assessment of whether this key has permissions beyond RPC (webhook management is confirmed in `shared/constants.ts:471` comment).
 - -> **CHAIN-02**: `app/lib/connection.ts:33` RPC URL resolution chain (NEXT_PUBLIC_RPC_URL > DEVNET_RPC_URL) -- both paths contain the API key. RPC node trust assessment needed for mainnet.
 - -> **WEB-01**: No XSS vectors found in this analysis, but if XSS existed, the localStorage settings key and CustomEvent dispatch surface would be accessible.
 
@@ -327,7 +327,7 @@ This is a DoS vector against the user's own session, not a data theft vector. Th
 
 ## Questions for Other Focus Areas
 
-1. **For SEC-02:** Does the Helius API key `[REDACTED-DEVNET-KEY]-...` have webhook management permissions? If so, an attacker could register malicious webhooks using the client-exposed key.
+1. **For SEC-02:** Does the Helius API key `[REDACTED-DEVNET-KEY]...` have webhook management permissions? If so, an attacker could register malicious webhooks using the client-exposed key.
 2. **For WEB-01:** Are there any XSS vectors that could enable the CustomEvent-based RPC rate-limit attack?
 3. **For INFRA-05:** Is `NEXT_PUBLIC_RPC_URL` set at build time on Railway? If the mainnet RPC URL contains a paid API key, it would be baked into the production bundle.
 

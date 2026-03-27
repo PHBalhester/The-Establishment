@@ -10,7 +10,7 @@ severity_breakdown: {critical: 0, high: 2, medium: 5, low: 3, informational: 2}
 # Cloud & Environment Configuration -- Condensed Summary
 
 ## Key Findings (Top 10)
-- **Helius API key hardcoded in source**: Key `[REDACTED-DEVNET-KEY]-...` committed to git in 4 locations, accessible in client bundle via `shared/programs.ts` -- `shared/constants.ts:474`, `shared/programs.ts:22`, `scripts/webhook-manage.ts:28`, `scripts/backfill-candles.ts:47`
+- **Helius API key hardcoded in source**: Key `[REDACTED-DEVNET-KEY]...` committed to git in 4 locations, accessible in client bundle via `shared/programs.ts` -- `shared/constants.ts:474`, `shared/programs.ts:22`, `scripts/webhook-manage.ts:28`, `scripts/backfill-candles.ts:47`
 - **Webhook auth is optional**: `HELIUS_WEBHOOK_SECRET` check skipped when env var unset; no fail-closed default -- `app/app/api/webhooks/helius/route.ts:135-141`
 - **No centralized env var validation**: Each file reads `process.env.*` with its own fallback pattern; no startup-time schema validation (no envalid/zod); missing vars silently fall through to defaults -- scattered across all config files
 - **DATABASE_URL passed raw to postgres driver**: No SSL mode enforcement; Railway Postgres may or may not use TLS by default -- `app/db/connection.ts:51`, `app/db/migrate.ts:42`

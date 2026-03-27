@@ -13,11 +13,16 @@
  *    degraded state. Each check runs independently so one failure doesn't
  *    mask the other.
  *
- * Returns (always 200):
- *   { status: "ok"|"degraded", checks: { postgres, solanaRpc }, timestamp }
+ * Public response (no secret or wrong secret):
+ *   { status: "ok"|"degraded", timestamp }
+ *
+ * Authenticated response (?secret=HEALTH_SECRET):
+ *   { status, checks: { postgres, solanaRpc }, wsSubscriber, credits, timestamp }
+ *
+ * Always returns HTTP 200 (Railway health check depends on this).
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { captureException } from "@/lib/sentry";
 import { sql } from "drizzle-orm";
 import { db } from "@/db/connection";
@@ -25,11 +30,23 @@ import { getConnection } from "@/lib/connection";
 import { getStatus as getWsSubscriberStatus } from "@/lib/ws-subscriber";
 import { creditCounter } from "@/lib/credit-counter";
 import { protocolStore } from "@/lib/protocol-store";
+import { checkRateLimit, getClientIp, HEALTH_RATE_LIMIT } from "@/lib/rate-limit";
+import { computeStatus, buildPublicResponse, buildAuthenticatedResponse } from "@/lib/health-response";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // --- Rate limiting ---
+  const clientIp = getClientIp(request);
+  const rateCheck = checkRateLimit(clientIp, HEALTH_RATE_LIMIT, "health");
+  if (!rateCheck.allowed) {
+    return new Response("Too Many Requests", {
+      status: 429,
+      headers: { "Retry-After": String(rateCheck.retryAfter) },
+    });
+  }
+
   let postgres = false;
   let solanaRpc = false;
 
@@ -58,16 +75,20 @@ export async function GET() {
     captureException(err instanceof Error ? err : new Error(`[health] Solana RPC check failed: ${err}`));
   }
 
-  const status = postgres && solanaRpc ? "ok" : "degraded";
+  const status = computeStatus(postgres, solanaRpc);
 
-  const wsSubscriber = getWsSubscriberStatus();
-  const credits = creditCounter.getStats();
+  // --- Authenticated path: full diagnostics ---
+  const secret = request.nextUrl.searchParams.get("secret");
+  const healthSecret = process.env.HEALTH_SECRET;
+  if (healthSecret && secret === healthSecret) {
+    const wsSubscriber = getWsSubscriberStatus();
+    const credits = creditCounter.getStats();
 
-  return NextResponse.json({
-    status,
-    checks: { postgres, solanaRpc },
-    wsSubscriber,
-    credits,
-    timestamp: new Date().toISOString(),
-  });
+    return NextResponse.json(
+      buildAuthenticatedResponse(status, { postgres, solanaRpc, wsSubscriber, credits }),
+    );
+  }
+
+  // --- Public path: stripped response ---
+  return NextResponse.json(buildPublicResponse(status));
 }

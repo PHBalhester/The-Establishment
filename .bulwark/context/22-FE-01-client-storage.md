@@ -11,7 +11,7 @@ severity_breakdown: {critical: 0, high: 1, medium: 3, low: 5}
 
 ## Key Findings (Top 9)
 
-1. **NEXT_PUBLIC_RPC_URL contains Helius API key**: The `.env.local` file sets `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...` and `.env.mainnet` template specifies the same pattern. Next.js inlines ALL `NEXT_PUBLIC_*` values into the client JavaScript bundle at build time, regardless of whether any client code references the variable. The API key is extractable from the compiled JS. -- `.env.local:1`, `.env.mainnet:49`
+1. **NEXT_PUBLIC_RPC_URL contains Helius API key**: The `.env.local` file sets `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...` and `.env.mainnet` template specifies the same pattern. Next.js inlines ALL `NEXT_PUBLIC_*` values into the client JavaScript bundle at build time, regardless of whether any client code references the variable. The API key is extractable from the compiled JS. -- `.env.local:1`, `.env.mainnet:49`
 
 2. **No localStorage cleanup on wallet disconnect**: The disconnect handlers (`WalletButton.tsx:54-59`, `SettingsStation.tsx:58-66`, `LaunchWalletButton.tsx:63-68`) call `await disconnect()` but do not clear localStorage. Only user preferences (slippage/volume/mute) are stored -- no secrets or tokens -- but the `dr-fraudsworth-settings` key persists indefinitely. -- `app/components/wallet/WalletButton.tsx:54`, `app/components/station/SettingsStation.tsx:58`
 
@@ -51,7 +51,7 @@ severity_breakdown: {critical: 0, high: 1, medium: 3, low: 5}
 
 ## Risk Observations (Prioritized)
 
-1. **NEXT_PUBLIC_RPC_URL API key exposure (HIGH)**: `.env.local:1` contains `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...`. Next.js inlines this into the client bundle. An attacker can extract the API key from the production JS bundle and abuse the Helius RPC credits directly. This was flagged as H002 in Audit #1 (FIXED status), but the .env file still contains the value. If `NEXT_PUBLIC_RPC_URL` is set on Railway for mainnet, the mainnet API key would be exposed. The `.env.mainnet` template also uses `NEXT_PUBLIC_RPC_URL` with api-key placeholder. The RPC proxy (`/api/rpc`) exists specifically to avoid this, but having the env var set defeats the purpose.
+1. **NEXT_PUBLIC_RPC_URL API key exposure (HIGH)**: `.env.local:1` contains `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...`. Next.js inlines this into the client bundle. An attacker can extract the API key from the production JS bundle and abuse the Helius RPC credits directly. This was flagged as H002 in Audit #1 (FIXED status), but the .env file still contains the value. If `NEXT_PUBLIC_RPC_URL` is set on Railway for mainnet, the mainnet API key would be exposed. The `.env.mainnet` template also uses `NEXT_PUBLIC_RPC_URL` with api-key placeholder. The RPC proxy (`/api/rpc`) exists specifically to avoid this, but having the env var set defeats the purpose.
 
 2. **Cluster fallback to devnet (MEDIUM)**: Missing `NEXT_PUBLIC_CLUSTER` silently defaults to "devnet" in both `ClusterConfigProvider.tsx:27` and `protocol-config.ts:25`. On mainnet, if this env var is accidentally unset during Railway deployment, the frontend would use devnet mint addresses, pool addresses, and program IDs -- transactions would silently fail or target wrong accounts.
 

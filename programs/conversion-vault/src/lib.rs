@@ -47,4 +47,16 @@ pub mod conversion_vault {
     ) -> Result<()> {
         instructions::convert::handler(ctx, amount_in)
     }
+
+    /// Convert tokens at fixed 100:1 rate with on-chain balance reading and slippage protection.
+    ///
+    /// When `amount_in == 0` (convert-all mode), reads the user's on-chain token balance.
+    /// The `minimum_output` parameter enforces slippage protection on the output amount.
+    pub fn convert_v2<'info>(
+        ctx: Context<'_, '_, 'info, 'info, Convert<'info>>,
+        amount_in: u64,
+        minimum_output: u64,
+    ) -> Result<()> {
+        instructions::convert_v2::handler(ctx, amount_in, minimum_output)
+    }
 }

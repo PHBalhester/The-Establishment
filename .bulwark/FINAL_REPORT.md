@@ -81,7 +81,7 @@ A real Solana private key (`2zJgKnGr...`) is committed in `.mcp.json` line 8 and
 
 **Status:** CONFIRMED | **Severity:** HIGH | **Evolution:** RECURRENT (Audit #1 H004/H131)
 
-The devnet Helius API key (`[REDACTED-DEVNET-KEY]-...`) is committed in `.env.devnet:8` and `shared/programs.ts:24`. This key grants full webhook management via `api.helius.xyz/v0/webhooks` — an attacker can register shadow webhooks for passive surveillance of all protocol events, or delete the production webhook to blind the SSE/chart data pipeline. The key has never been rotated across 3 commits.
+The devnet Helius API key (`[REDACTED-DEVNET-KEY]...`) is committed in `.env.devnet:8` and `shared/programs.ts:24`. This key grants full webhook management via `api.helius.xyz/v0/webhooks` — an attacker can register shadow webhooks for passive surveillance of all protocol events, or delete the production webhook to blind the SSE/chart data pipeline. The key has never been rotated across 3 commits.
 
 **Affected code:** `.env.devnet:8`, `shared/programs.ts:24`, `scripts/webhook-manage.ts`
 **Impact:** Passive surveillance of all protocol events; data pipeline disruption via webhook deletion; chart data corruption if combined with webhook secret.

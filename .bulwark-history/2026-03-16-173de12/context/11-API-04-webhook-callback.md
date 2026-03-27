@@ -15,7 +15,7 @@ severity_breakdown: {critical: 0, high: 2, medium: 3, low: 3}
 2. **Webhook auth uses non-constant-time string comparison (`!==`)**: The authorization header is compared to the secret via JavaScript `!==` (line 138), which is vulnerable to timing attacks that can leak the secret byte-by-byte. Should use `crypto.timingSafeEqual`. -- `app/app/api/webhooks/helius/route.ts:138`
 3. **SSE endpoint has no authentication or rate limiting**: Any client can open unlimited EventSource connections to `/api/sse/candles`. Each connection holds a long-lived HTTP stream with a 15-second heartbeat interval. An attacker opening thousands of connections can exhaust server memory and file descriptors. -- `app/app/api/sse/candles/route.ts:38`
 4. **No request body size limit on webhook endpoint**: The Helius webhook handler calls `req.json()` on the raw body without enforcing a maximum size. A malicious sender could POST a multi-gigabyte JSON array to exhaust server memory (OOM kill). -- `app/app/api/webhooks/helius/route.ts:146`
-5. **Hardcoded Helius API key in source code**: `webhook-manage.ts:28` and `shared/constants.ts:474` contain the Helius API key `[REDACTED-DEVNET-KEY]-...` as a fallback default. While documented as "free-tier," this key controls webhook CRUD operations (create/update/delete) and RPC access. If the repo is public, anyone can manage webhooks for this account. -- `scripts/webhook-manage.ts:28`
+5. **Hardcoded Helius API key in source code**: `webhook-manage.ts:28` and `shared/constants.ts:474` contain the Helius API key `[REDACTED-DEVNET-KEY]...` as a fallback default. While documented as "free-tier," this key controls webhook CRUD operations (create/update/delete) and RPC access. If the repo is public, anyone can manage webhooks for this account. -- `scripts/webhook-manage.ts:28`
 6. **No replay protection on webhook deliveries**: The webhook handler has no timestamp validation or nonce checking. An attacker who captures a legitimate Helius webhook delivery can replay it indefinitely. While the DB uses `onConflictDoNothing` for exact duplicates, modified payloads (same signature, different amounts) would create false price data. -- `app/app/api/webhooks/helius/route.ts:131`
 7. **SSE broadcasts unvalidated price data from webhook**: If a forged webhook injects fake swap events, the SSE manager immediately broadcasts fake `candle-update` events to all connected chart clients, causing real-time price manipulation in the UI. -- `app/app/api/webhooks/helius/route.ts:222-234`
 8. **No rate limiting on any API route**: All 6 API routes (`/api/webhooks/helius`, `/api/sse/candles`, `/api/candles`, `/api/sol-price`, `/api/carnage-events`, `/api/health`) have zero rate limiting. No Next.js middleware.ts exists. -- All route files
@@ -334,7 +334,7 @@ The `webhook-manage.ts` script puts the Helius API key in the URL query string. 
 ### R5: Hardcoded API Key (LOW)
 
 **File:** `scripts/webhook-manage.ts:28`, `shared/constants.ts:474`
-**Mechanism:** Helius API key `[REDACTED-DEVNET-KEY]-...` hardcoded as fallback.
+**Mechanism:** Helius API key `[REDACTED-DEVNET-KEY]...` hardcoded as fallback.
 **Impact:** If repo is public, anyone can manage Helius webhooks (create, redirect, delete).
 **Likelihood:** Depends on repo visibility.
 **Recommendation:** Remove hardcoded key. Require env var.

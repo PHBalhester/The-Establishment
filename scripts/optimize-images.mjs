@@ -52,6 +52,7 @@ const OVERLAYS = [
   { src: 'RewardsVat.png', name: 'rewards-vat' },
   { src: 'Settings.png', name: 'settings' },
   { src: 'SwapStation.png', name: 'swap-station' },
+  { src: 'WalletConnected.png', name: 'wallet-connected' },
 ];
 
 // Background responsive breakpoints (widths in pixels)

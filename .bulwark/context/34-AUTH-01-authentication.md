@@ -17,7 +17,7 @@ severity_breakdown: {critical: 0, high: 1, medium: 4, low: 4}
 - **RPC proxy method allowlist is strong but sendTransaction is allowed**: The allowlist includes `sendTransaction`, meaning any browser client can submit arbitrary (pre-signed) transactions through the server's Helius endpoint. This is expected for DeFi but worth noting. -- `app/app/api/rpc/route.ts:31-58`
 - **Rate limiter IP extraction trusts x-forwarded-for header**: The first IP from `x-forwarded-for` is used as the rate-limit key. Behind Railway's reverse proxy this is correct, but if the app were ever exposed directly, an attacker could spoof IPs to bypass rate limits. -- `app/lib/rate-limit.ts:129-151`
 - **Health endpoint exposes internal system status without authentication**: `/api/health` returns postgres connectivity, Solana RPC status, WebSocket subscriber state, and RPC credit usage to any caller. -- `app/app/api/health/route.ts:32-73`
-- **.env.devnet committed to git with Helius API key**: The file `.env.devnet` is tracked by git and contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]-...`. This is a devnet key (low severity) but the pattern is concerning for mainnet. -- `.env.devnet:8-9`
+- **.env.devnet committed to git with Helius API key**: The file `.env.devnet` is tracked by git and contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]...`. This is a devnet key (low severity) but the pattern is concerning for mainnet. -- `.env.devnet:8-9`
 - **Webhook secret is a simple string comparison against Authorization header**: Helius sends the secret in the `Authorization` header directly (not HMAC-SHA256 of the body). This means the secret is replayable -- anyone who intercepts one webhook delivery can replay future requests with the same header value. The replay protection (5-minute blockTime check) only applies to raw transaction webhooks, not enhanced account change webhooks. -- `app/app/api/webhooks/helius/route.ts:286-301`
 
 ## Critical Mechanisms
@@ -344,7 +344,7 @@ The connection factory (`app/lib/connection.ts`) routes browser RPC through `/ap
 
 | Handoff To | Item | Context |
 |-----------|------|---------|
-| SEC-02 | `.env.devnet` committed with Helius API key | File tracked by git: `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]-...` |
+| SEC-02 | `.env.devnet` committed with Helius API key | File tracked by git: `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]...` |
 | SEC-02 | Webhook secret rotation capability | No support for dual-secret rotation |
 | API-01 | SSE endpoints unauthenticated | `/api/sse/protocol` and `/api/sse/candles` open to any client |
 | ERR-03 | Missing rate limits on candles/carnage-events | DB query endpoints with no volumetric defense |
@@ -382,7 +382,7 @@ The connection factory (`app/lib/connection.ts`) routes browser RPC through `/ap
 
 ### 6. .env.devnet API Key in Git (LOW)
 **File:** `.env.devnet` (tracked by git)
-**Observation:** Contains `HELIUS_API_KEY=[REDACTED-DEVNET-HELIUS-KEY]` and `CLUSTER_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...`. This is a devnet key (low impact) but the pattern of committing API keys to git is concerning. Previously flagged as H005 (partially fixed) in Audit #1.
+**Observation:** Contains `HELIUS_API_KEY=[REDACTED-DEVNET-HELIUS-KEY]` and `CLUSTER_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...`. This is a devnet key (low impact) but the pattern of committing API keys to git is concerning. Previously flagged as H005 (partially fixed) in Audit #1.
 **Impact:** Devnet Helius API key exposed. Could be used to register rogue webhooks or exhaust rate limits on the devnet plan. Not impactful for mainnet (separate key, not committed).
 
 ### 7. Webhook Secret Not HMAC-Based (LOW)

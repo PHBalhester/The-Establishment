@@ -69,7 +69,7 @@ This catalog was generated from:
 
 **Attack Vector:**
 1. Attacker views page source or inspects bundled JS
-2. Extracts API key `[REDACTED-DEVNET-KEY]-...` from RPC URL or constants
+2. Extracts API key `[REDACTED-DEVNET-KEY]...` from RPC URL or constants
 3. Uses key to: (a) flood RPC requests exhausting rate limit, (b) call Helius webhook management API to register malicious webhooks or delete legitimate ones
 4. Service degraded for all users; data pipeline disrupted
 

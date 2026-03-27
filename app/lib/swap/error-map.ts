@@ -109,6 +109,30 @@ const AMM_ERRORS: Record<number, string> = {
 };
 
 // =============================================================================
+// Vault Errors (6000-6007)
+// Source: programs/conversion-vault/src/error.rs
+// =============================================================================
+
+const VAULT_ERRORS: Record<number, string> = {
+  // 6000: ZeroAmount
+  6000: "Input amount must be greater than zero.",
+  // 6001: OutputTooSmall
+  6001: "Input amount too small for vault conversion.",
+  // 6002: InvalidMintPair
+  6002: "Invalid token pair for vault conversion.",
+  // 6003: SameMint
+  6003: "Cannot convert a token to itself.",
+  // 6004: InvalidTokenProgram
+  6004: "Invalid token program. Please report this issue.",
+  // 6005: MathOverflow
+  6005: "Vault conversion overflow. Try a smaller amount.",
+  // 6006: SlippageExceeded
+  6006: "Vault output below your minimum. This is unexpected for fixed-rate conversions -- please retry.",
+  // 6007: InvalidOwner
+  6007: "Token account ownership verification failed. Please report this issue.",
+};
+
+// =============================================================================
 // Combined Error Map
 // =============================================================================
 
@@ -122,9 +146,11 @@ const AMM_ERRORS: Record<number, string> = {
 export const SWAP_ERROR_MAP: {
   tax: Record<number, string>;
   amm: Record<number, string>;
+  vault: Record<number, string>;
 } = {
   tax: TAX_ERRORS,
   amm: AMM_ERRORS,
+  vault: VAULT_ERRORS,
 };
 
 // =============================================================================
@@ -154,8 +180,10 @@ export function parseSwapError(error: unknown): string {
   const anchorMatch = errStr.match(/Error Number:\s*(\d+)/);
   if (anchorMatch) {
     const code = parseInt(anchorMatch[1], 10);
-    // Check if AMM program ID is in the error string to determine source
+    // Check program IDs in the error string to determine source
+    const isVault = errStr.includes(PROGRAM_IDS.VAULT.toBase58());
     const isAmm = errStr.includes(PROGRAM_IDS.AMM.toBase58());
+    if (isVault && VAULT_ERRORS[code]) return VAULT_ERRORS[code];
     const errorMap = isAmm ? AMM_ERRORS : TAX_ERRORS;
     if (errorMap[code]) return errorMap[code];
     // Try the other map as fallback
@@ -167,8 +195,10 @@ export function parseSwapError(error: unknown): string {
   const hexMatch = errStr.match(/custom program error:\s*0x([0-9a-fA-F]+)/);
   if (hexMatch) {
     const code = parseInt(hexMatch[1], 16);
-    // Check AMM program ID to determine source
+    // Check program IDs to determine source
+    const isVault = errStr.includes(PROGRAM_IDS.VAULT.toBase58());
     const isAmm = errStr.includes(PROGRAM_IDS.AMM.toBase58());
+    if (isVault && VAULT_ERRORS[code]) return VAULT_ERRORS[code];
     const errorMap = isAmm ? AMM_ERRORS : TAX_ERRORS;
     if (errorMap[code]) return errorMap[code];
     const fallbackMap = isAmm ? TAX_ERRORS : AMM_ERRORS;
@@ -195,6 +225,14 @@ export function parseSwapError(error: unknown): string {
     return "Transaction was cancelled.";
   }
 
-  // (g) Fallback
+  // (g) Wallet extension popup closed / failed to open.
+  // "Plugin Closed" is thrown by Backpack (and potentially other extension wallets)
+  // when the signing popup fails to open or is immediately dismissed. Common cause:
+  // Brave browser's built-in Solana wallet conflicts with extension wallets.
+  if (/Plugin Closed/i.test(errStr)) {
+    return "Wallet popup failed to open. If using Brave browser, go to brave://settings/wallet and set the Default Solana Wallet to \"Extensions (no fallback)\", then reload the page.";
+  }
+
+  // (h) Fallback
   return "Swap failed. Please try again or reduce the swap amount.";
 }

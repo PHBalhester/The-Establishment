@@ -11,9 +11,9 @@ severity_breakdown: {critical: 1, high: 3, medium: 4, low: 4}
 
 ## Key Findings (Top 10)
 
-1. **CRITICAL: .env.mainnet contains live mainnet secrets committed to working tree**: Mainnet Helius API key, crank wallet private key (full 64-byte secret key as JSON array), and webhook HMAC secret are present in `.env.mainnet`. While the root `.gitignore` has `.env.mainnet` on line 2, the file exists in the working directory and git status shows it as tracked/modified. The crank wallet private key (`WALLET_KEYPAIR=[REDACTED]`) provides direct SOL signing capability. -- `.env.mainnet:30-31,88,106`
+1. **CRITICAL: .env.mainnet contains live mainnet secrets committed to working tree**: Mainnet Helius API key, crank wallet private key (full 64-byte secret key as JSON array), and webhook HMAC secret are present in `.env.mainnet`. While the root `.gitignore` has `.env.mainnet` on line 2, the file exists in the working directory and git status shows it as tracked/modified. The crank wallet private key (`WALLET_KEYPAIR=[REDACTED-CRANK-KEY-PREFIX]`) provides direct SOL signing capability. -- `.env.mainnet:30-31,88,106`
 
-2. **HIGH: .env (root) contains Helius devnet API key and SUPERMEMORY API key committed to git**: `.env` is listed in `.gitignore` but git status shows `M .env.devnet` (modified), and `.env` itself contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]-...` and `SUPERMEMORY_CC_API_KEY=[REDACTED-SUPERMEMORY]-...`. The `.env.devnet` file explicitly comments "devnet credentials are non-sensitive" but SUPERMEMORY_CC_API_KEY looks like a third-party credential. -- `.env:1-2`, `.env.devnet:5`
+2. **HIGH: .env (root) contains Helius devnet API key and SUPERMEMORY API key committed to git**: `.env` is listed in `.gitignore` but git status shows `M .env.devnet` (modified), and `.env` itself contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]...`. The `.env.devnet` file explicitly comments "devnet credentials are non-sensitive" but SUPERMEMORY_CC_API_KEY looks like a third-party credential. -- `.env:1-2`, `.env.devnet:5`
 
 3. **HIGH: No startup validation for critical environment variables**: The codebase uses `process.env.X || "default"` or `process.env.X ?? fallback` pattern extensively without centralized startup validation. Critical variables like `HELIUS_RPC_URL`, `HELIUS_WEBHOOK_SECRET`, `DATABASE_URL`, `WS_SUBSCRIBER_ENABLED` are checked at point-of-use with varying failure modes (throw, silent default, warn-and-continue). No envalid/zod schema validation at startup. -- `app/lib/connection.ts:41-44`, `app/lib/ws-subscriber.ts:451`, `app/db/connection.ts:40-46`
 
@@ -337,11 +337,11 @@ Not applicable -- no IAM, Terraform, or cloud provider configuration files. Rail
 
 ### OC-220: Hardcoded Cloud Credentials
 
-No hardcoded cloud credentials in source code (checked via AIP-118 patterns). API keys are in env files, not source. However, `.env.devnet` (committed) contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]-...`. Devnet Helius API keys have rate limits but no financial risk.
+No hardcoded cloud credentials in source code (checked via AIP-118 patterns). API keys are in env files, not source. However, `.env.devnet` (committed) contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]...`. Devnet Helius API keys have rate limits but no financial risk.
 
 **`.env.mainnet` (gitignored but present)** contains:
-- `HELIUS_API_KEY=[REDACTED-MAINNET-KEY]-...` (mainnet Helius key)
-- `CLUSTER_URL=https://mainnet.helius-rpc.com/?api-key=[REDACTED-MAINNET-KEY]-...`
+- `HELIUS_API_KEY=[REDACTED-MAINNET-KEY]...` (mainnet Helius key)
+- `CLUSTER_URL=https://mainnet.helius-rpc.com/?api-key=[REDACTED-MAINNET-KEY]...`
 - `WALLET_KEYPAIR=[[REDACTED-CRANK-KEY-BYTES]` (64-byte secret key)
 - `HELIUS_WEBHOOK_SECRET=[REDACTED-WEBHOOK-SECRET]...`
 - `PDA_MANIFEST={...}` (contains mainnet Helius API key in clusterUrl)
@@ -409,7 +409,7 @@ The PDA_MANIFEST JSON blob at line 90 contains the mainnet Helius API key embedd
 
 **R1: Mainnet Crank Wallet Secret Key in Working Tree**
 - File: `.env.mainnet:88`
-- The full 64-byte secret key is present as `WALLET_KEYPAIR=[REDACTED]`
+- The full 64-byte secret key is present as `WALLET_KEYPAIR=[REDACTED-CRANK-KEY-PREFIX]`
 - Gitignored, but the file exists locally and is at risk from: accidental commit, backup systems, disk cloning, screen sharing, file sync services
 - The crank wallet (`F84XUxo5VM8FJZeGvC3CrHYwLzFod3ep57CULjZ4ZXc1` per MEMORY.md) holds SOL for epoch transitions
 - Impact: Direct SOL theft if the key is exposed
@@ -486,7 +486,7 @@ The PDA_MANIFEST JSON blob at line 90 contains the mainnet Helius API key embedd
 
 **R12: .env.devnet Commits SUPERMEMORY_CC_API_KEY**
 - File: `.env.devnet:5`
-- `SUPERMEMORY_CC_API_KEY=[REDACTED-SUPERMEMORY]-...` committed to git
+- `SUPERMEMORY_CC_API_KEY=[REDACTED-SUPERMEMORY-KEY]...` committed to git
 - If this is a paid third-party API key, it could be abused by anyone with repo access
 - Need to verify if this key has any associated costs or permissions
 

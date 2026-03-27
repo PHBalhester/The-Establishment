@@ -145,28 +145,62 @@ function escapeRegex(s: string): string {
 // ---------------------------------------------------------------------------
 
 function main() {
+  const isDevnet = process.argv.includes("--devnet");
+
   console.log("Patch Mint Addresses");
-  console.log("====================\n");
+  console.log(`====================  [${isDevnet ? "DEVNET" : "MAINNET"}]\n`);
 
-  const mintKeypairsDir = path.resolve(PROJECT_ROOT, "scripts/deploy/mint-keypairs");
-  if (!fs.existsSync(mintKeypairsDir)) {
-    console.error("ERROR: scripts/deploy/mint-keypairs/ directory not found.");
-    console.error("This directory must contain crime-mint.json, fraud-mint.json, profit-mint.json.");
-    process.exit(1);
+  let crimeMintAddress: string;
+  let fraudMintAddress: string;
+  let profitMintAddress: string;
+  let epochProgramAddress: string;
+  let stakingProgramAddress: string;
+  let ammProgramAddress: string;
+  let treasuryAddress: string;
+
+  if (isDevnet) {
+    // Devnet: read addresses from deployments/devnet.json (source of truth for devnet).
+    // keypairs/ contains mainnet keypairs — cannot be used for devnet builds.
+    const devnetJsonPath = path.resolve(PROJECT_ROOT, "deployments/devnet.json");
+    if (!fs.existsSync(devnetJsonPath)) {
+      console.error("ERROR: deployments/devnet.json not found.");
+      console.error("This file is required for devnet builds to resolve correct program IDs.");
+      process.exit(1);
+    }
+    const devnet = JSON.parse(fs.readFileSync(devnetJsonPath, "utf8"));
+    crimeMintAddress = devnet.mints.crime;
+    fraudMintAddress = devnet.mints.fraud;
+    profitMintAddress = devnet.mints.profit;
+    epochProgramAddress = devnet.programs.epochProgram;
+    stakingProgramAddress = devnet.programs.staking;
+    ammProgramAddress = devnet.programs.amm;
+    treasuryAddress = devnet.treasury;
+    console.log("  Source: deployments/devnet.json\n");
+  } else {
+    // Mainnet: derive addresses from keypairs (existing behavior, unchanged).
+    const mintKeypairsDir = path.resolve(PROJECT_ROOT, "scripts/deploy/mint-keypairs");
+    if (!fs.existsSync(mintKeypairsDir)) {
+      console.error("ERROR: scripts/deploy/mint-keypairs/ directory not found.");
+      console.error("This directory must contain crime-mint.json, fraud-mint.json, profit-mint.json.");
+      process.exit(1);
+    }
+
+    const crimeMint = loadKeypair("scripts/deploy/mint-keypairs/crime-mint.json");
+    const fraudMint = loadKeypair("scripts/deploy/mint-keypairs/fraud-mint.json");
+    const profitMint = loadKeypair("scripts/deploy/mint-keypairs/profit-mint.json");
+    const epochProgram = loadKeypair("keypairs/epoch-program.json");
+    const stakingProgram = loadKeypair("keypairs/staking-keypair.json");
+    const ammProgram = loadKeypair("keypairs/amm-keypair.json");
+
+    crimeMintAddress = crimeMint.publicKey.toBase58();
+    fraudMintAddress = fraudMint.publicKey.toBase58();
+    profitMintAddress = profitMint.publicKey.toBase58();
+    epochProgramAddress = epochProgram.publicKey.toBase58();
+    stakingProgramAddress = stakingProgram.publicKey.toBase58();
+    ammProgramAddress = ammProgram.publicKey.toBase58();
+    treasuryAddress = process.env.TREASURY_PUBKEY || "8kPzhQoUPx7LYM18f9TzskW4ZgvGyq4jMPYZikqmHMH4";
+    console.log("  Source: keypairs/\n");
   }
-
-  // Load mint keypairs
-  const crimeMint = loadKeypair("scripts/deploy/mint-keypairs/crime-mint.json");
-  const fraudMint = loadKeypair("scripts/deploy/mint-keypairs/fraud-mint.json");
-  const profitMint = loadKeypair("scripts/deploy/mint-keypairs/profit-mint.json");
-
-  // Load program keypairs
-  const epochProgram = loadKeypair("keypairs/epoch-program.json");
-  const stakingProgram = loadKeypair("keypairs/staking-keypair.json");
-  const ammProgram = loadKeypair("keypairs/amm-keypair.json");
-
-  // Treasury: env var or devnet wallet default
-  const treasuryAddress = process.env.TREASURY_PUBKEY || "8kPzhQoUPx7LYM18f9TzskW4ZgvGyq4jMPYZikqmHMH4";
 
   // Build patch specs
   const patches: PatchSpec[] = [
@@ -175,38 +209,38 @@ function main() {
       label: "Vault CRIME mint",
       file: "programs/conversion-vault/src/constants.rs",
       functionName: "crime_mint",
-      newAddress: crimeMint.publicKey.toBase58(),
+      newAddress: crimeMintAddress,
     },
     {
       label: "Vault FRAUD mint",
       file: "programs/conversion-vault/src/constants.rs",
       functionName: "fraud_mint",
-      newAddress: fraudMint.publicKey.toBase58(),
+      newAddress: fraudMintAddress,
     },
     {
       label: "Vault PROFIT mint",
       file: "programs/conversion-vault/src/constants.rs",
       functionName: "profit_mint",
-      newAddress: profitMint.publicKey.toBase58(),
+      newAddress: profitMintAddress,
     },
     // Category 2: Tax program cross-refs
     {
       label: "Tax epoch_program_id",
       file: "programs/tax-program/src/constants.rs",
       functionName: "epoch_program_id",
-      newAddress: epochProgram.publicKey.toBase58(),
+      newAddress: epochProgramAddress,
     },
     {
       label: "Tax staking_program_id",
       file: "programs/tax-program/src/constants.rs",
       functionName: "staking_program_id",
-      newAddress: stakingProgram.publicKey.toBase58(),
+      newAddress: stakingProgramAddress,
     },
     {
       label: "Tax amm_program_id",
       file: "programs/tax-program/src/constants.rs",
       functionName: "amm_program_id",
-      newAddress: ammProgram.publicKey.toBase58(),
+      newAddress: ammProgramAddress,
     },
     // Category 3: Treasury wallet
     {
@@ -220,19 +254,19 @@ function main() {
       label: "Curve CRIME mint",
       file: "programs/bonding_curve/src/constants.rs",
       functionName: "crime_mint",
-      newAddress: crimeMint.publicKey.toBase58(),
+      newAddress: crimeMintAddress,
     },
     {
       label: "Curve FRAUD mint",
       file: "programs/bonding_curve/src/constants.rs",
       functionName: "fraud_mint",
-      newAddress: fraudMint.publicKey.toBase58(),
+      newAddress: fraudMintAddress,
     },
     {
       label: "Curve epoch_program_id",
       file: "programs/bonding_curve/src/constants.rs",
       functionName: "epoch_program_id",
-      newAddress: epochProgram.publicKey.toBase58(),
+      newAddress: epochProgramAddress,
     },
   ];
 

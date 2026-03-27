@@ -199,17 +199,25 @@ Real SOL yield from real trading friction -- not ponzinomics. Every on-chain pro
 
 ### Active
 
-(No active milestone — all development milestones complete)
+## Current Milestone: v1.5 Post-Launch Hardening & Expansion
+
+**Goal:** Harden crank operations, fix multi-hop token leakage, prepare aggregator integration infrastructure, and expand to USDC pool pairs.
+
+**Target features:**
+- Crank hardening: close recovery randomness accounts, Switchboard gateway failover research
+- Vault convert-all: on-chain fix for intermediate token leakage in multi-hop swaps
+- Frontend fixes: SSE connection scaling, max-SOL fee reserve, chart webhook setup
+- Jupiter/aggregator readiness: Rust SDK crate implementing Amm trait, whitelist analysis, integration docs
+- USDC pools: program architecture (futarchy-aware), CRIME/USDC + FRAUD/USDC implementation
 
 ### Future
 
-**Post-Launch Operations (v2 scope):**
+**Post-Launch Operations (v2+ scope):**
 - Progressive timelock extension (1hr -> 24hr after stability period)
 - Immunefi bug bounty program
 - External audit funded from protocol revenue
-- Jupiter routing integration (Tax Program CPI publishing)
 - Protocol-owned arbitrage (Carnage Fund capture)
-- USDC pool pairs (CRIME/USDC, FRAUD/USDC)
+- Futarchy rebalancing (four-pool prediction market — see Docs/FutureFutarchy.md)
 
 ### Backlog
 
@@ -219,7 +227,7 @@ Real SOL yield from real trading friction -- not ponzinomics. Every on-chain pro
 
 ### Out of Scope
 
-- External integrations beyond Switchboard VRF -- minimize attack surface
+- External integrations beyond Switchboard VRF and Jupiter -- minimize attack surface (Jupiter integration now in scope for v1.5)
 - WebGL / Three.js 3D scene -- 2D CSS achieves the goal without complexity/device requirements
 - Complex particle physics -- stylized CSS animations preferred
 - SFX triggers (per-interaction sounds) -- user decided not to pursue

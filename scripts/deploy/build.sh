@@ -94,7 +94,12 @@ echo ""
 # Must run BEFORE anchor build so the correct addresses are compiled in.
 # ---------------------------------------------------------------------------
 echo "[0b/4] Patching mint addresses in constants.rs files..."
-if [ -d "scripts/deploy/mint-keypairs" ]; then
+if [ "$DEVNET_FLAG" = true ]; then
+  # Devnet: read addresses from deployments/devnet.json (keypairs/ has mainnet keys)
+  npx tsx scripts/deploy/patch-mint-addresses.ts --devnet
+  echo "  done"
+elif [ -d "scripts/deploy/mint-keypairs" ]; then
+  # Mainnet: derive addresses from keypairs (existing behavior)
   npx tsx scripts/deploy/patch-mint-addresses.ts
   echo "  done"
 else

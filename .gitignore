@@ -1,62 +1,39 @@
-# === SECRETS (NEVER COMMIT) ===
 .env
-.env.*
-!.env.example
-keypairs/
-mint-keypairs/
-*.json.burned
-*.json.bak
-stress-keypairs.json
-graduation-state.json
-graduation-state.json.devnet-backup
+.env.mainnet
 
-# === MCP/Claude config (may contain API keys) ===
-.mcp.json
-.claude/settings.local.json
-.claude/agents/
-.claude/projects/
-
-# === Build artifacts ===
+# Anchor/Rust build artifacts
 target/
 .anchor/
+
+# Node.js
 node_modules/
 dist/
-.next/
-app/.next/
 
-# === Test artifacts ===
-test-ledger/
-scripts/e2e/*.jsonl
-scripts/e2e/*.log
-.bok/results/
-.bok/worktree/
+# Deployment artifacts (generated at runtime, contain secrets)
+scripts/deploy/mint-keypairs/
 
-# === Generated deploy artifacts ===
-scripts/deploy/deploy-log-*.txt
+# Mainnet keypairs — NEVER commit these
+keypairs/mainnet-*
 scripts/deploy/pda-manifest.json
 scripts/deploy/pda-manifest.md
-scripts/deploy/mint-keypairs/
-scripts/deploy/alt-address.json
-scripts/deploy/deployment-report.md
+scripts/deploy/deploy-log-*.txt
 
-# === OS files ===
-.DS_Store
-*.swp
-Thumbs.db
+# Next.js app build artifacts
+app/.next/
+# IDL files ARE committed (needed for Railway builds where anchor build hasn't run)
 
-# === Internal tooling archives ===
-.dbs/
-.dbs-archive/
+# Local validator state (contains keypairs + rocksdb)
+test-ledger/
 
-# === Large assets ===
+# E2E test run logs
+scripts/e2e/*.jsonl
+scripts/e2e/*.log
+
+# BOK verification worktree (multi-GB Kani/test artifacts)
+.bok/worktree/
+
+# Original unoptimized PNGs (optimized WebPs live in app/public/scene/)
 WebsiteAssets/
-ci-artifacts/
-
-# === IDE/Editor ===
-.idea/
-.vscode/
-*.code-workspace
-
 # === Dev certificates ===
 app/certificates/
 *.pem

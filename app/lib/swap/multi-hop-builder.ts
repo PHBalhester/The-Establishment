@@ -18,7 +18,9 @@
  *   so WSOL accumulates across legs and only unwraps at the end
  *
  * v0 TX + skipPreflight: Devnet simulation rejects v0 TX with stale blockhash.
- * We use skipPreflight:true and check confirmation.value.err instead.
+ * useProtocolWallet centralizes the skipPreflight:true override on devnet;
+ * callers express their mainnet preference (skipPreflight:false) and the
+ * wallet layer handles the devnet override transparently.
  */
 
 import {
@@ -101,6 +103,7 @@ async function buildStepTransaction(
   userPublicKey: PublicKey,
   minimumOutput: number,
   priorityFeeMicroLamports: number,
+  isMultiHopStep: boolean = false,
 ): Promise<Transaction> {
   const isCrime =
     step.inputToken === "CRIME" ||
@@ -130,14 +133,19 @@ async function buildStepTransaction(
   }
 
   // Vault conversion steps (CRIME/FRAUD <-> PROFIT)
+  // When isMultiHopStep=true: convert-all mode (amount_in=0) reads the user's
+  // on-chain balance — whatever the preceding AMM step deposited in the same leg.
+  // When isMultiHopStep=false: exact amount — used for 1-hop converts AND for
+  // vault steps at the start of a split-route leg (prevents greedy consumption).
   if (step.pool.includes("Vault")) {
     const inputMint = step.inputToken === "PROFIT" ? MINTS.PROFIT : (isCrime ? MINTS.CRIME : MINTS.FRAUD);
     const outputMint = step.outputToken === "PROFIT" ? MINTS.PROFIT : (isCrime ? MINTS.CRIME : MINTS.FRAUD);
+    const effectiveAmountIn = isMultiHopStep ? 0 : step.inputAmount;
 
     return buildVaultConvertTransaction({
       connection,
       userPublicKey,
-      amountInBaseUnits: step.inputAmount,
+      amountInBaseUnits: effectiveAmountIn,
       minimumOutput,
       inputMint,
       outputMint,
@@ -286,8 +294,10 @@ export async function fetchProtocolALT(
  * Works for 1-hop (direct), 2-hop (multi-hop), and 4-step (split) routes.
  * All steps are combined into one transaction -- one signature, atomic.
  *
- * Since execution is atomic, no extra slippage is needed for hop 2+.
- * Inter-hop pool changes from other users can't happen within a single TX.
+ * Since execution is atomic, intermediate hops use full expected outputs
+ * (no slippage reduction). Slippage is only applied to steps producing
+ * the route's final output token. Split routes are handled correctly:
+ * each independent leg starts from its own quoted input amount.
  *
  * @param route - Complete route with 1+ steps
  * @param connection - Solana RPC connection
@@ -301,8 +311,7 @@ export async function buildAtomicRoute(
   userPublicKey: PublicKey,
   priorityFeeMicroLamports: number,
 ): Promise<AtomicBuildResult> {
-  // 1. Calculate slippage for minimum output per step
-  //    Atomic = no inter-hop risk, same slippage for all steps
+  // 1. Calculate slippage BPS from the route's minimumOutput vs outputAmount
   const slippageBps =
     route.outputAmount > 0
       ? Math.floor((1 - route.minimumOutput / route.outputAmount) * 10_000)
@@ -317,31 +326,62 @@ export async function buildAtomicRoute(
   //    step N+1's inputAmount. The AMM enforces minimumOutput on-chain — if
   //    step N succeeds, the user has at least that many tokens.
   //
-  //    Known tradeoff: ~slippage% of intermediate tokens (CRIME/FRAUD) may
-  //    remain unconverted in the user's wallet. Proper fix requires on-chain
-  //    vault change to convert user's full balance instead of a fixed amount.
+  //    Vault steps in multi-hop routes use convert-all mode (amount_in=0),
+  //    which reads the user's on-chain balance and converts everything.
+  //    This eliminates intermediate token leakage from slippage differences.
+  //
+  //    Split routes have TWO INDEPENDENT legs (e.g., steps [0,1] and [2,3]).
+  //    Each leg's first step must use its own inputAmount from the route
+  //    quote, not the output from the previous leg. A leg boundary is detected
+  //    when a step's inputToken matches the route's overall inputToken.
   const stepTransactions: Transaction[] = [];
   let previousMinimumOutput: number | null = null;
 
-  for (const step of route.steps) {
-    // For hop 2+, override input with previous step's guaranteed minimum
-    const effectiveInput = previousMinimumOutput ?? step.inputAmount;
-    const effectiveStep = previousMinimumOutput
-      ? { ...step, inputAmount: effectiveInput }
-      : step;
+  for (let i = 0; i < route.steps.length; i++) {
+    const step = route.steps[i];
+
+    // Detect leg boundary in split routes: a new independent leg starts
+    // when a step's inputToken matches the route's inputToken AND it's
+    // not the very first step (which always starts fresh).
+    const isNewLeg =
+      i > 0 &&
+      route.isSplit &&
+      step.inputToken === route.inputToken;
+
+    // For intermediate hops within a leg, use the previous step's guaranteed
+    // minimum output as this step's input (safe: AMM enforces this on-chain).
+    // For new legs or the first step, use the step's own quoted inputAmount.
+    const effectiveInput =
+      isNewLeg || previousMinimumOutput === null
+        ? step.inputAmount
+        : previousMinimumOutput;
+
+    const effectiveStep =
+      effectiveInput !== step.inputAmount
+        ? { ...step, inputAmount: effectiveInput }
+        : step;
 
     const minimumOutput = Math.floor(
       effectiveStep.outputAmount * (10_000 - slippageBps) / 10_000,
     );
 
+    // Convert-all mode (amount_in=0) should only be used for vault steps
+    // that RECEIVE tokens from a preceding AMM step in the same leg.
+    // In split routes, vault steps at the START of a leg must use exact
+    // amounts — otherwise leg 1's vault greedily converts the user's entire
+    // balance, leaving 0 for leg 2's vault (ZeroAmount error).
+    const isFirstStepInLeg = i === 0 || isNewLeg;
+    const useConvertAll = route.steps.length > 1 && !isFirstStepInLeg;
     const tx = await buildStepTransaction(
       effectiveStep,
       connection,
       userPublicKey,
       minimumOutput,
       priorityFeeMicroLamports,
+      useConvertAll,
     );
     stepTransactions.push(tx);
+
     previousMinimumOutput = minimumOutput;
   }
 
@@ -376,8 +416,9 @@ export async function buildAtomicRoute(
  * Execute an atomic multi-hop route.
  *
  * Signs the single v0 transaction (one wallet prompt), sends it, and
- * waits for confirmation. Uses skipPreflight because devnet simulation
- * rejects v0 transactions with "Blockhash not found" errors.
+ * waits for confirmation. Passes skipPreflight:false (mainnet preference);
+ * on devnet, useProtocolWallet overrides this to true centrally since v0
+ * simulation returns "Blockhash not found" on devnet RPCs.
  *
  * @param build - Result from buildAtomicRoute
  * @param wallet - Protocol wallet (wallet-adapter wrapper)
@@ -390,15 +431,14 @@ export async function executeAtomicRoute(
   connection: Connection,
 ): Promise<MultiHopResult> {
   // 1. Sign and send (single wallet prompt, Blowfish-compatible)
-  // Devnet: skipPreflight because v0 simulation returns "Blockhash not found".
-  // Mainnet: preflight enabled so wallets can simulate and catch errors early.
-  const isDevnet = process.env.NEXT_PUBLIC_CLUSTER !== "mainnet";
+  // Callers pass skipPreflight:false (mainnet preference). On devnet,
+  // useProtocolWallet overrides to true centrally — no per-callsite logic.
   let signature: string;
   try {
     signature = await wallet.sendTransaction(
       build.transaction,
       connection,
-      { skipPreflight: isDevnet, maxRetries: 3 },
+      { skipPreflight: false, maxRetries: 3 },
     );
   } catch (err) {
     return { status: "failed", signatures: [], error: parseSwapError(err) };

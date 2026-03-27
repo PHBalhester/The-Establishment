@@ -15,7 +15,7 @@ severity_breakdown: {critical: 0, high: 3, medium: 5, low: 6}
 
 2. **17 devnet keypairs committed to git (H005 PARTIALLY_FIXED)**: 18 keypair JSON files tracked in `keypairs/` including `devnet-wallet.json`, all Squads signer keypairs, program keypairs, and test keypairs. While devnet-only, these hold SOL, can sign transactions, and their git history is permanent. Mainnet keypairs are correctly gitignored. -- `keypairs/*.json` via `git ls-files`
 
-3. **`NEXT_PUBLIC_RPC_URL` in `app/.env.local` contains Helius API key**: `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...` is a client-exposed env var. While `.env.local` is not tracked by git and the key is devnet-only, if this pattern is replicated for mainnet (as the mainnet template suggests at `app/.env.mainnet:49`), the mainnet Helius API key would be baked into the client bundle at build time. -- `app/.env.local:1`, `app/.env.mainnet:49`
+3. **`NEXT_PUBLIC_RPC_URL` in `app/.env.local` contains Helius API key**: `NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...` is a client-exposed env var. While `.env.local` is not tracked by git and the key is devnet-only, if this pattern is replicated for mainnet (as the mainnet template suggests at `app/.env.mainnet:49`), the mainnet Helius API key would be baked into the client bundle at build time. -- `app/.env.local:1`, `app/.env.mainnet:49`
 
 4. **Mainnet env template instructs putting API key in `NEXT_PUBLIC_RPC_URL`**: `app/.env.mainnet:49` has `NEXT_PUBLIC_RPC_URL=https://mainnet.helius-rpc.com/?api-key=CHANGE_ME_MAINNET`. If followed, this bakes the mainnet Helius API key into the browser bundle. The connection.ts proxy pattern (H002 fix) correctly routes browser RPC through `/api/rpc`, but `NEXT_PUBLIC_RPC_URL` is still referenced as a server-side fallback and its build-time value is visible in the bundle. -- `app/.env.mainnet:49`, `app/lib/connection.ts:41`
 
@@ -259,7 +259,7 @@ Railway  ──── env vars ────── no NEXT_PUBLIC_ ────�
 ## Dependencies (External APIs & Services)
 
 ### Helius (RPC + Webhooks)
-- **API Key Scope:** Single key (`[REDACTED-DEVNET-KEY]-...`) used for both RPC and webhook management
+- **API Key Scope:** Single key (`[REDACTED-DEVNET-KEY]...`) used for both RPC and webhook management
 - **Permissions:** Full Helius API access (create/delete webhooks, RPC calls)
 - **Least Privilege Violation:** The same key that provides RPC should not also manage webhooks. Helius supports separate keys for different purposes.
 - **Exposure Points:** `.env.devnet` (committed), `.env` (local), `shared/programs.ts` (committed), `app/.env.local` (local)
@@ -454,7 +454,7 @@ However, the crank runner at `crank-runner.ts` was previously flagged for loggin
 
 The committed Helius API key in `.env.devnet` grants full Helius API access including webhook management. An attacker with read access to the repository could:
 
-1. Call `GET https://api.helius.xyz/v0/webhooks?api-key=[REDACTED-DEVNET-KEY]-...` to list all webhooks
+1. Call `GET https://api.helius.xyz/v0/webhooks?api-key=[REDACTED-DEVNET-KEY]...` to list all webhooks
 2. Call `PUT` to modify the webhook URL to point to an attacker-controlled endpoint
 3. Receive all protocol events (swap data, epoch transitions, carnage events)
 4. Alternatively, call `DELETE` to remove the webhook, blinding the protocol's data pipeline

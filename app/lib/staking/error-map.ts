@@ -91,6 +91,15 @@ export function parseStakingError(error: unknown): string {
     return "Transaction was cancelled.";
   }
 
-  // (f) Fallback
+  // (f) Wallet extension popup closed / failed to open.
+  // "Plugin Closed" is thrown by Backpack (and potentially other extension wallets)
+  // when the signing popup fails to open or is immediately dismissed. Common cause:
+  // Brave browser's built-in Solana wallet conflicts with extension wallets.
+  // Fix: brave://settings/wallet -> set Default Solana Wallet to "Extensions (no fallback)".
+  if (/Plugin Closed/i.test(errStr)) {
+    return "Wallet popup failed to open. If using Brave browser, go to brave://settings/wallet and set the Default Solana Wallet to \"Extensions (no fallback)\", then reload the page.";
+  }
+
+  // (g) Fallback
   return "Staking operation failed. Please try again.";
 }

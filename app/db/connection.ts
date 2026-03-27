@@ -52,9 +52,9 @@ function getDb(): PostgresJsDatabase<typeof schema> {
   const sslConfig = isProductionDb ? { ssl: "require" as const } : {};
 
   // postgres.js client: max 10 connections (Railway free tier limit).
-  // In production, increase this based on your Postgres plan.
+  // connect_timeout: 5s prevents pool slot exhaustion if Postgres is unreachable.
   const client =
-    globalForDb.pgClient ?? postgres(connectionString, { max: 10, ...sslConfig });
+    globalForDb.pgClient ?? postgres(connectionString, { max: 10, connect_timeout: 5, ...sslConfig });
 
   // Warn if non-production connects to a remote host without TLS (VH-L002).
   // Credentials and queries may transmit in plaintext over the network.

@@ -48,7 +48,7 @@ pub const MINIMUM_OUTPUT_FLOOR_BPS: u64 = 5000;
 /// Matches declare_id! in epoch-program/src/lib.rs.
 /// Source keypair: keypairs/epoch-program.json
 pub fn epoch_program_id() -> Pubkey {
-    Pubkey::from_str("4Heqc8QEjJCspHR8y96wgZBnBfbe3Qb8N6JBZMQt9iw2").unwrap()
+    Pubkey::from_str("E1u6fM9Pr3Pgbcz1NGq9KQzFbwD8F1uFkT3c9x1juA5h").unwrap()
 }
 
 /// Carnage SOL Vault PDA seed.
@@ -97,7 +97,7 @@ pub fn get_carnage_signer_pda() -> (Pubkey, u8) {
 /// Matches declare_id! in amm/src/lib.rs.
 /// Source keypair: keypairs/amm-keypair.json
 pub fn amm_program_id() -> Pubkey {
-    Pubkey::from_str("5JsSAL3kJDUWD4ZveYXYZmgm1eVqueesTZVdAvtZg8cR").unwrap()
+    Pubkey::from_str("J7JxmNkzi3it6Q4TNYjTD6mKdgMaD1pxrstn1RnL3bR5").unwrap()
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ pub const ESCROW_VAULT_SEED: &[u8] = b"escrow_vault";
 /// Matches declare_id! in staking/src/lib.rs.
 /// Source keypair: keypairs/staking-keypair.json
 pub fn staking_program_id() -> Pubkey {
-    Pubkey::from_str("12b3t1cNiAUoYLiWFEnFa4w6qYxVAiqCWU7KZuzLPYtH").unwrap()
+    Pubkey::from_str("DrFg87bRjNZUmE6FZw5oPL9zGsbpdrVHrxPHSibfZv1H").unwrap()
 }
 
 /// Treasury wallet address for protocol revenue.
@@ -134,7 +134,7 @@ pub fn staking_program_id() -> Pubkey {
 /// address before launch. See Docs/mainnet-checklist.md.
 #[cfg(feature = "devnet")]
 pub fn treasury_pubkey() -> Pubkey {
-    Pubkey::from_str("3ihhwLnEJ2duwPSLYxhLbFrdhhxXLcvcrV9rAHqMgzCv").unwrap()
+    Pubkey::from_str("8kPzhQoUPx7LYM18f9TzskW4ZgvGyq4jMPYZikqmHMH4").unwrap()
 }
 
 #[cfg(all(feature = "localnet", not(feature = "devnet")))]
@@ -145,7 +145,7 @@ pub fn treasury_pubkey() -> Pubkey {
 
 #[cfg(not(any(feature = "devnet", feature = "localnet")))]
 pub fn treasury_pubkey() -> Pubkey {
-    Pubkey::from_str("3ihhwLnEJ2duwPSLYxhLbFrdhhxXLcvcrV9rAHqMgzCv").unwrap()
+    Pubkey::from_str("8kPzhQoUPx7LYM18f9TzskW4ZgvGyq4jMPYZikqmHMH4").unwrap()
 }
 
 /// Anchor discriminator for Staking::deposit_rewards instruction.

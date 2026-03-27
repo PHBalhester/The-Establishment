@@ -509,7 +509,7 @@ These IDLs are required for `BorshCoder` / `EventParser` to decode events.
 
 ### Existing Helius API Key
 The project already has a Helius devnet API key in `shared/programs.ts`:
-`https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...`
+`https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...`
 This same key is used for webhook API calls.
 
 ### Program IDs for Webhook Monitoring

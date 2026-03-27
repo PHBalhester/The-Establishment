@@ -10,7 +10,7 @@ severity_breakdown: {critical: 0, high: 1, medium: 4, low: 3, informational: 1}
 # Monitoring, Metrics & Observability Exposure — Condensed Summary
 
 ## Key Findings (Top 5-10)
-- **Helius API key hardcoded in committed source**: API key `[REDACTED-DEVNET-KEY]-...` is in `shared/constants.ts:474` and `shared/programs.ts:22`, embedded in the RPC URL and exported as a named constant. While documented as "free-tier, not a secret", this key gates RPC access and webhook management — abuse could exhaust rate limits or register malicious webhooks.
+- **Helius API key hardcoded in committed source**: API key `[REDACTED-DEVNET-KEY]...` is in `shared/constants.ts:474` and `shared/programs.ts:22`, embedded in the RPC URL and exported as a named constant. While documented as "free-tier, not a secret", this key gates RPC access and webhook management — abuse could exhaust rate limits or register malicious webhooks.
 - **Health endpoint exposes dependency topology without authentication**: `/api/health` at `app/app/api/health/route.ts:28` returns Postgres and Solana RPC connectivity status to any caller. Railway uses this for liveness, but it also tells attackers which dependencies exist and whether they are reachable.
 - **No server-side error reporting to Sentry**: `app/instrumentation.ts:6` is explicitly a no-op. Server-side errors (API routes, webhook handler, SSE) only surface through Railway's stdout log capture. Crank runner errors similarly go only to stdout.
 - **Crank runner logs wallet public key and balance to stdout**: `scripts/crank/crank-runner.ts:176-177` logs full wallet pubkey and RPC URL. Line 214-216 logs wallet balance warnings. Railway captures all stdout — if Railway dashboard access is compromised, operational wallet identity is exposed.
@@ -167,7 +167,7 @@ All off-chain TypeScript/TSX files related to monitoring, health checks, error r
 
 **Details:**
 - `shared/constants.ts:474`: `export const HELIUS_API_KEY = "[REDACTED-DEVNET-HELIUS-KEY]";`
-- `shared/programs.ts:22`: Full Helius RPC URL with key embedded: `https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]-...`
+- `shared/programs.ts:22`: Full Helius RPC URL with key embedded: `https://devnet.helius-rpc.com/?api-key=[REDACTED-DEVNET-KEY]...`
 - Comment says "free-tier API key, not a secret"
 - Used by: `app/lib/connection.ts` (fallback RPC), `app/providers/providers.tsx` (wallet-adapter endpoint), `scripts/webhook-manage.ts:28` (webhook CRUD operations)
 

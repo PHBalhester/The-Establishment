@@ -35,7 +35,7 @@ severity_breakdown: {critical: 1, high: 2, medium: 3, low: 3}
 
 2. **HIGH — 17 devnet keypair files committed to git**: The `keypairs/` directory has 17+ keypair JSON files tracked in git (devnet-wallet, squads-signer-1/2/3, program deploy keypairs, etc.). These are Solana keypair files containing secret keys. While devnet-only, git history preserves them permanently. H005 from Audit #1 flagged this as PARTIALLY_FIXED — no remediation observed in this delta. — `keypairs/*.json` (git-tracked)
 
-3. **HIGH — `.env.devnet` committed with Helius API key and SuperMemory API key**: The file `.env.devnet` is tracked by git and contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]-...` and `SUPERMEMORY_CC_API_KEY=[REDACTED-SUPERMEMORY]-...`. File comment says "devnet credentials are non-sensitive" but the Helius API key provides webhook management access (create/delete/list webhooks), not just RPC access. — `.env.devnet:5,8`
+3. **HIGH — `.env.devnet` committed with Helius API key and SuperMemory API key**: The file `.env.devnet` is tracked by git and contains `HELIUS_API_KEY=[REDACTED-DEVNET-KEY]...`. File comment says "devnet credentials are non-sensitive" but the Helius API key provides webhook management access (create/delete/list webhooks), not just RPC access. — `.env.devnet:5,8`
 
 4. **MEDIUM — Crank wallet private key loaded from env var without zeroization**: `scripts/crank/crank-provider.ts:46` parses `WALLET_KEYPAIR` env var into a `secretKey` array, constructs a `Keypair`, but never zeroizes the intermediate `secretKey` array. The raw key material persists in V8 heap until GC. In a long-running crank process, a heap dump would expose the key. — `scripts/crank/crank-provider.ts:46-48`
 
@@ -388,7 +388,7 @@ Program deploy keypairs in `keypairs/` contain the private keys that correspond 
 
 1. **For CHAIN-02:** When the RPC proxy at `/api/rpc` receives a `sendTransaction` call, does it forward the raw signed transaction to Helius? Could a malicious client send a crafted transaction through the proxy?
 2. **For INFRA-03:** Is `WALLET_KEYPAIR` configured as a "secret" variable in Railway (masked in logs/UI), or is it a regular env var?
-3. **For SEC-02:** What is the exact scope of the Helius API key `[REDACTED-DEVNET-KEY]-...`? Is it a free-tier key with limited permissions, or does it have full account access?
+3. **For SEC-02:** What is the exact scope of the Helius API key `[REDACTED-DEVNET-KEY]...`? Is it a free-tier key with limited permissions, or does it have full account access?
 4. **For DATA-04:** Are there any other log paths that could emit key material? Specifically, does the Anchor error path ever serialize account data that includes keypair bytes?
 5. **For INFRA-03:** Is the `/api/health` endpoint accessible from the public internet on Railway, or is it behind an internal network?
 

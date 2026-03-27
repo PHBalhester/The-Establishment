@@ -33,7 +33,7 @@ severity_breakdown: {critical: 0, high: 3, medium: 5, low: 4}
 ## Key Findings (Top 10)
 
 1. **Single RPC provider (Helius) with no failover**: All frontend, crank, and deployment code routes through a single Helius RPC endpoint. If Helius experiences downtime, the entire protocol halts -- `app/lib/connection.ts:33`, `scripts/crank/crank-provider.ts:35`, `shared/programs.ts:22`
-2. **Helius API key hardcoded in source code**: The Helius API key `[REDACTED-DEVNET-KEY]-...` is committed to the repo in `shared/programs.ts:22`, `shared/constants.ts:474`, and `scripts/backfill-candles.ts:47`. While labeled "free-tier, not a secret," rate limiting is tied to this key -- revocation or abuse affects everyone.
+2. **Helius API key hardcoded in source code**: The Helius API key `[REDACTED-DEVNET-KEY]...` is committed to the repo in `shared/programs.ts:22`, `shared/constants.ts:474`, and `scripts/backfill-candles.ts:47`. While labeled "free-tier, not a secret," rate limiting is tied to this key -- revocation or abuse affects everyone.
 3. **skipPreflight=true on user-facing bonding curve TXs**: `BuyForm.tsx:189` and `SellForm.tsx:198` use `skipPreflight: true` for user-initiated bonding curve purchases and sells. Failed TXs consume fees without prior simulation feedback. This bypasses the RPC's pre-submission safety check.
 4. **skipPreflight=true on multi-hop swaps (atomic routes)**: `multi-hop-builder.ts:381` uses `skipPreflight: true` for v0 VersionedTransactions. Comment says devnet simulation rejects v0 TX -- but this pattern will carry to mainnet unless explicitly changed.
 5. **No RPC response validation on pool reserve reads**: `usePoolPrices.ts:118-121` reads pool reserves via `getMultipleAccountsInfo` and directly uses values for swap quoting. A malicious/compromised RPC could return manipulated reserve data, causing users to accept bad quotes.
@@ -233,7 +233,7 @@ None of these trust assumptions are validated or verified.
 
 **Finding 1: All code paths lead to Helius**
 
-Every single RPC call in the codebase -- frontend reads, crank transactions, deployment operations -- goes through the same Helius infrastructure. The Helius API key (`[REDACTED-DEVNET-KEY]-...`) appears in:
+Every single RPC call in the codebase -- frontend reads, crank transactions, deployment operations -- goes through the same Helius infrastructure. The Helius API key (`[REDACTED-DEVNET-KEY]...`) appears in:
 - `shared/programs.ts:22` (imported by frontend)
 - `shared/constants.ts:474` (imported by frontend)
 - `scripts/backfill-candles.ts:47` (deploy-time only)

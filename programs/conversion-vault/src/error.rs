@@ -19,4 +19,10 @@ pub enum VaultError {
 
     #[msg("Overflow in conversion calculation")]
     MathOverflow,
+
+    #[msg("Output below minimum — slippage protection")]
+    SlippageExceeded,
+
+    #[msg("Input account not owned by signer")]
+    InvalidOwner,
 }

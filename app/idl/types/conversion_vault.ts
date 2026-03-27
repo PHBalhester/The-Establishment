@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/conversion_vault.json`.
  */
 export type ConversionVault = {
-  "address": "5uawA6ehYTu69Ggvm3LSK84qFawPKxbWgfngwj15NRJ",
+  "address": "9SGsfhxHM7dA4xqApSHKj6c24Bp2rYyqHsti2bDdh263",
   "metadata": {
     "name": "conversionVault",
     "version": "0.1.0",
@@ -113,6 +113,116 @@ export type ConversionVault = {
       "args": [
         {
           "name": "amountIn",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "convertV2",
+      "docs": [
+        "Convert tokens at fixed 100:1 rate with on-chain balance reading and slippage protection.",
+        "",
+        "When `amount_in == 0` (convert-all mode), reads the user's on-chain token balance.",
+        "The `minimum_output` parameter enforces slippage protection on the output amount."
+      ],
+      "discriminator": [
+        2,
+        169,
+        12,
+        141,
+        64,
+        38,
+        20,
+        20
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "docs": [
+            "User performing the conversion."
+          ],
+          "signer": true
+        },
+        {
+          "name": "vaultConfig",
+          "docs": [
+            "VaultConfig PDA — needed for vault token account authority."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "userInputAccount",
+          "docs": [
+            "User's input token account (source — user sends tokens here)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "userOutputAccount",
+          "docs": [
+            "User's output token account (destination — user receives tokens here)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "inputMint",
+          "docs": [
+            "Input mint (CRIME, FRAUD, or PROFIT)."
+          ]
+        },
+        {
+          "name": "outputMint",
+          "docs": [
+            "Output mint (CRIME, FRAUD, or PROFIT)."
+          ]
+        },
+        {
+          "name": "vaultInput",
+          "docs": [
+            "Vault's input token account (receives user's input tokens).",
+            "Validated: correct mint + correct PDA authority."
+          ],
+          "writable": true
+        },
+        {
+          "name": "vaultOutput",
+          "docs": [
+            "Vault's output token account (sends converted tokens to user).",
+            "Validated: correct mint + correct PDA authority."
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "amountIn",
+          "type": "u64"
+        },
+        {
+          "name": "minimumOutput",
           "type": "u64"
         }
       ]
@@ -290,7 +400,7 @@ export type ConversionVault = {
           "docs": [
             "The Conversion Vault program — used to look up its ProgramData address."
           ],
-          "address": "5uawA6ehYTu69Ggvm3LSK84qFawPKxbWgfngwj15NRJ"
+          "address": "9SGsfhxHM7dA4xqApSHKj6c24Bp2rYyqHsti2bDdh263"
         },
         {
           "name": "programData",
@@ -351,6 +461,16 @@ export type ConversionVault = {
       "code": 6005,
       "name": "mathOverflow",
       "msg": "Overflow in conversion calculation"
+    },
+    {
+      "code": 6006,
+      "name": "slippageExceeded",
+      "msg": "Output below minimum — slippage protection"
+    },
+    {
+      "code": 6007,
+      "name": "invalidOwner",
+      "msg": "Input account not owned by signer"
     }
   ],
   "types": [

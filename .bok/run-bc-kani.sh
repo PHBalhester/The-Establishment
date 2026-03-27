@@ -1,11 +1,11 @@
 #!/bin/bash
 # Run bonding curve Kani harnesses individually with 5-minute timeout
-source $HOME/.cargo/env
+source "$HOME/.cargo/env"
 export PATH="$HOME/.cargo/bin:$HOME/.local/share/solana/install/active_release/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-cd "/path/to/project/.bok/worktree"
+cd "$(cd "$(dirname "$0")" && pwd)/worktree"
 
 TIMEOUT_SECS=300
-RESULTS_DIR="/path/to/project/.bok/results"
+RESULTS_DIR="$(cd "$(dirname "$0")" && pwd)/results"
 SUMMARY="$RESULTS_DIR/bc-kani-summary.log"
 echo "=== Bonding Curve Kani Results ===" > "$SUMMARY"
 
