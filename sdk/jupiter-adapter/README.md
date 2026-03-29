@@ -14,8 +14,8 @@ Dr. Fraudsworth exposes 6 Amm instances to Jupiter:
 
 | # | Instance | Type | Key Source | Reserves | Fees |
 |---|----------|------|------------|----------|------|
-| 1 | CRIME/SOL | `SolPoolAmm` | Pool PDA | Dynamic (AMM constant-product) | 1% LP + dynamic tax (4-14%) |
-| 2 | FRAUD/SOL | `SolPoolAmm` | Pool PDA | Dynamic (AMM constant-product) | 1% LP + dynamic tax (4-14%) |
+| 1 | CRIME/SOL | `SolPoolAmm` | Pool PDA | Dynamic (AMM constant-product) | 1% LP + dynamic tax (1-4% or 11-14%) |
+| 2 | FRAUD/SOL | `SolPoolAmm` | Pool PDA | Dynamic (AMM constant-product) | 1% LP + dynamic tax (1-4% or 11-14%) |
 | 3 | CRIME->PROFIT | `VaultAmm` | Synthetic PDA | Fixed rate (100:1) | Zero |
 | 4 | FRAUD->PROFIT | `VaultAmm` | Synthetic PDA | Fixed rate (100:1) | Zero |
 | 5 | PROFIT->CRIME | `VaultAmm` | Synthetic PDA | Fixed rate (1:100) | Zero |
@@ -53,7 +53,7 @@ let all_keys: Vec<Pubkey> = all_pool_keys();
 SOL pool swaps have two fee components:
 
 1. **LP fee:** 1% (100 BPS), fixed, deducted from swap amount
-2. **Dynamic tax:** 4-14% based on current epoch, split across staking rewards, treasury, and Carnage Fund
+2. **Dynamic tax:** 1-4% (cheap side) or 11-14% (expensive side), VRF-randomized each epoch (~13 min). Tax is split across staking rewards (71%), Carnage Fund (24%), and treasury (5%)
 
 **Buy (SOL -> token):** Tax deducted from SOL input BEFORE the AMM swap.
 **Sell (token -> SOL):** Tax deducted from SOL output AFTER the AMM swap.
@@ -68,14 +68,19 @@ Tax rates change every epoch (~13 minutes). Jupiter's `update()` method refreshe
 
 ## Epoch Dynamics
 
-Tax rates rotate every epoch between the CRIME and FRAUD factions:
+Each epoch (~13 minutes), VRF randomness determines:
 
-| Faction | Cheap Side | Expensive Side |
-|---------|-----------|----------------|
-| Buy tax | 4% | 14% |
-| Sell tax | 14% | 4% |
+1. **Which faction is cheap** — 75% chance of flipping each epoch
+2. **Exact tax magnitudes** — independently randomized per token from discrete sets
 
-Which faction is "cheap" alternates each epoch based on VRF randomness. This creates arbitrage opportunities between the two pools that Jupiter can route through.
+| Side | Buy Tax | Sell Tax |
+|------|---------|----------|
+| Cheap | 1%, 2%, 3%, or 4% | 11%, 12%, 13%, or 14% |
+| Expensive | 11%, 12%, 13%, or 14% | 1%, 2%, 3%, or 4% |
+
+CRIME and FRAUD get **independent magnitude rolls** — e.g., CRIME cheap buy could be 2% while FRAUD expensive buy is 13%. No intermediate values exist (only the 8 discrete rates above).
+
+This creates arbitrage opportunities between the two pools that Jupiter can route through.
 
 The `EpochState` PDA is declared in `get_accounts_to_update()`, so Jupiter automatically refreshes it and passes the latest state to `update()`.
 
