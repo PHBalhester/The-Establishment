@@ -6,8 +6,11 @@ pub const LP_FEE_BPS: u16 = 100;
 /// Conversion rate for the vault (100:1 CRIME/FRAUD:PROFIT).
 pub const CONVERSION_RATE: u64 = 100;
 
-/// Token decimals for all Dr. Fraudsworth tokens.
-pub const TOKEN_DECIMALS: u8 = 9;
+/// Token decimals for all Dr. Fraudsworth tokens (CRIME, FRAUD, PROFIT).
+pub const TOKEN_DECIMALS: u8 = 6;
+
+/// SOL decimals (native mint).
+pub const SOL_DECIMALS: u8 = 9;
 
 /// Anchor discriminator for EpochState account.
 ///
