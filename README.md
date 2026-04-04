@@ -45,7 +45,7 @@ Dr. Fraudsworth implements a closed economic loop where trading friction generat
 
 3. **Carnage Events** -- When Carnage fires, the accumulated Carnage Fund executes autonomous buy-and-burn operations, redistributing value back to token holders by permanently removing supply.
 
-4. **PROFIT Staking** -- PROFIT token holders stake to earn real SOL yield from the 71% staker allocation of every swap. This is real yield from real trading activity, not inflationary token emissions.
+4. **PROFIT Staking** -- PROFIT token holders stake to earn real SOL rewards from the 71% staker allocation of every swap. This is real rewards from real trading activity, not inflationary token emissions.
 
 5. **Dual-Token Economy** -- CRIME and FRAUD are the two tradeable tokens, each with their own SOL pool. PROFIT is the yield-bearing governance token earned through the Conversion Vault.
 
@@ -61,7 +61,7 @@ The protocol consists of 6 active programs working together:
 
 - **Epoch Program** (`epoch-program`) -- VRF-driven epoch state machine. Manages the commit-reveal-consume cycle for Switchboard randomness. Controls tax rate rotation and Carnage event triggering.
 
-- **Staking** (`staking`) -- PROFIT token staking with SOL yield distribution. Tracks per-user stake positions and distributes accumulated staker rewards proportionally.
+- **Staking** (`staking`) -- PROFIT token staking with SOL rewards distribution. Tracks per-user stake positions and distributes accumulated staker rewards proportionally.
 
 - **Conversion Vault** (`conversion-vault`) -- Cross-token conversion mechanism allowing users to convert between CRIME/FRAUD and PROFIT at protocol-defined rates.
 
