@@ -1,73 +1,72 @@
 /**
- * Cluster-aware protocol address re-exports.
+ * Arc Network protocol address re-exports.
  *
- * Resolves the correct set of protocol addresses (mints, pools, PDAs, program IDs)
- * based on the NEXT_PUBLIC_CLUSTER env var (set at build time by Next.js).
+ * Resolves the correct set of contract addresses (tokens, AMM, staking, etc.)
+ * based on the NEXT_PUBLIC_NETWORK env var (set at build time by Next.js).
  *
- * All app/ code that needs cluster-specific addresses should import from here
- * instead of from @dr-fraudsworth/shared directly. This ensures the frontend
- * works correctly on both devnet and mainnet without regenerating constants.ts.
- *
- * Static constants (SEEDS, TOKEN_DECIMALS, fee BPS, etc.) are cluster-independent
- * and can still be imported directly from @dr-fraudsworth/shared.
+ * All app/ code that needs network-specific addresses should import from here.
  */
 
-import {
-  getClusterConfig,
-  resolvePoolWithConfig,
-  resolveRouteWithConfig,
-  type TokenSymbol,
-  type PoolConfig,
-  type RouteConfig,
-} from "@dr-fraudsworth/shared";
+export type TokenSymbol = "BRIBE" | "CORUPT" | "VOTES" | "USDC";
 
-// Resolve cluster name: "mainnet" → "mainnet-beta", default → "devnet"
-const rawCluster = process.env.NEXT_PUBLIC_CLUSTER || "devnet";
-const clusterName = rawCluster === "mainnet" ? "mainnet-beta" : rawCluster;
-const config = getClusterConfig(clusterName);
+export type NetworkName = "testnet" | "mainnet";
 
-// Re-export cluster-resolved addresses using the same names as constants.ts
-// so consuming files only need to change the import source.
-export const PROGRAM_IDS = config.programIds;
-export const MINTS = config.mints;
-export const DEVNET_POOLS = config.pools;
-export const DEVNET_POOL_CONFIGS = config.poolConfigs;
-export const DEVNET_PDAS = config.pdas;
-export const DEVNET_PDAS_EXTENDED = config.pdasExtended;
-export const DEVNET_CURVE_PDAS = config.curvePdas;
-export const TREASURY_PUBKEY = config.treasury;
-export const PROTOCOL_ALT = config.alt;
+const rawNetwork = process.env.NEXT_PUBLIC_NETWORK || "testnet";
+export const NETWORK: NetworkName =
+  rawNetwork === "mainnet" ? "mainnet" : "testnet";
 
-// Re-export TOKEN_PROGRAM_FOR_MINT using cluster-resolved mints
-import {
-  NATIVE_MINT,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-} from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
+// ── Contract addresses per network ──────────────────────────────────────────
+// Replace with real deployed addresses after running: forge script Deploy.s.sol
 
-export const TOKEN_PROGRAM_FOR_MINT: Record<string, PublicKey> = {
-  [NATIVE_MINT.toBase58()]: TOKEN_PROGRAM_ID,
-  [MINTS.CRIME.toBase58()]: TOKEN_2022_PROGRAM_ID,
-  [MINTS.FRAUD.toBase58()]: TOKEN_2022_PROGRAM_ID,
-  [MINTS.PROFIT.toBase58()]: TOKEN_2022_PROGRAM_ID,
+const TESTNET_ADDRESSES = {
+  BRIBE_TOKEN:    "0x0000000000000000000000000000000000000001",
+  CORUPT_TOKEN:   "0x0000000000000000000000000000000000000002",
+  VOTES_TOKEN:    "0x0000000000000000000000000000000000000003",
+  USDC:           "0x0000000000000000000000000000000000000004",
+  AMM:            "0x0000000000000000000000000000000000000005",
+  TAX_CONTROLLER: "0x0000000000000000000000000000000000000006",
+  EPOCH_MANAGER:  "0x0000000000000000000000000000000000000007",
+  VOTES_STAKING:  "0x0000000000000000000000000000000000000008",
+  CONVERSION_VAULT:"0x0000000000000000000000000000000000000009",
+} as const;
+
+const MAINNET_ADDRESSES = {
+  BRIBE_TOKEN:    "0x0000000000000000000000000000000000000001",
+  CORUPT_TOKEN:   "0x0000000000000000000000000000000000000002",
+  VOTES_TOKEN:    "0x0000000000000000000000000000000000000003",
+  USDC:           "0x0000000000000000000000000000000000000004",
+  AMM:            "0x0000000000000000000000000000000000000005",
+  TAX_CONTROLLER: "0x0000000000000000000000000000000000000006",
+  EPOCH_MANAGER:  "0x0000000000000000000000000000000000000007",
+  VOTES_STAKING:  "0x0000000000000000000000000000000000000008",
+  CONVERSION_VAULT:"0x0000000000000000000000000000000000000009",
+} as const;
+
+export const CONTRACT_ADDRESSES =
+  NETWORK === "mainnet" ? MAINNET_ADDRESSES : TESTNET_ADDRESSES;
+
+// ── Token metadata ───────────────────────────────────────────────────────────
+
+export const TOKEN_META: Record<TokenSymbol, { name: string; symbol: string; decimals: number; color: string }> = {
+  BRIBE:  { name: "Bribe",       symbol: "BRIBE",  decimals: 18, color: "#ff6b6b" },
+  CORUPT: { name: "Corruption",  symbol: "CORUPT", decimals: 18, color: "#d4a74d" },
+  VOTES:  { name: "Votes",       symbol: "VOTES",  decimals: 18, color: "#51cf66" },
+  USDC:   { name: "USD Coin",    symbol: "USDC",   decimals: 6,  color: "#2775ca" },
 };
 
-// Cluster-aware pool/route resolution
-export function resolvePool(
-  inputToken: TokenSymbol,
-  outputToken: TokenSymbol,
-): PoolConfig | null {
-  return resolvePoolWithConfig(config.poolConfigs, inputToken, outputToken);
-}
+// ── Fee config ───────────────────────────────────────────────────────────────
 
-export function resolveRoute(
-  inputToken: TokenSymbol,
-  outputToken: TokenSymbol,
-): RouteConfig | null {
-  return resolveRouteWithConfig(
-    { poolConfigs: config.poolConfigs, mints: config.mints, programIds: config.programIds },
-    inputToken,
-    outputToken,
-  );
-}
+export const FEE_CONFIG = {
+  /** LP fee in basis points */
+  LP_FEE_BPS: 100,
+  /** Tax distribution: staking 71%, carnage 24%, treasury 5% */
+  STAKING_SHARE_BPS:  7100,
+  CARNAGE_SHARE_BPS:  2400,
+  TREASURY_SHARE_BPS:  500,
+  /** Conversion rate: 100 BRIBE or CORUPT → 1 VOTES */
+  CONVERSION_RATE: 100n,
+  /** Carnage probability: ~4.3% (1 in 23 epochs) */
+  CARNAGE_ODDS_BPS: 430,
+  /** Epoch duration in seconds */
+  EPOCH_DURATION_SECONDS: 1800,
+} as const;
