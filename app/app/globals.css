@@ -2,17 +2,17 @@
 @import "./kit.css" layer(kit);
 
 /* =============================================================================
-   Dr. Fraudsworth's Finance Factory -- Steampunk Design Token System
+   The Establishment -- White House Official Design Token System
 
    All visual tokens defined as Tailwind v4 @theme variables.
-   Generates utility classes: bg-factory-*, text-factory-*, z-*, font-*, etc.
+   Generates utility classes: bg-government-*, text-government-*, z-*, font-*, etc.
 
-   Tone reference: Bioshock Infinite gentleman's workshop -- warm, polished brass,
-   amber, rich browns. Da Vinci notebook aesthetic for surfaces.
+   Tone reference: Official U.S. Government / White House aesthetic --
+   navy blue, white, gold accents, formal and professional. Inspired by
+   whitehouse.gov design with elegant serif typography and classic styling.
 
-   Phase 57 Brand Application: Refined toward warmer mahogany/wood tones and
-   brighter polished brass accents. Added semantic surfaces, interactive states,
-   and faction identity tokens. All text/background pairs verified WCAG AA.
+   Arc Network DeFi Protocol: Three tokens (BRIBE, CORUPT, VOTES) with
+   official government branding. All text/background pairs verified WCAG AA.
    ============================================================================= */
 
 /* =============================================================================
@@ -88,55 +88,55 @@
 
 @theme {
   /* ---------------------------------------------------------------------------
-     Steampunk Color Palette (--color-factory-*)
-     Generates: bg-factory-*, text-factory-*, border-factory-*, etc.
-     Refined Phase 57: warmer mahogany base, brighter polished brass accents
+     Government/White House Color Palette (--color-government-*)
+     Generates: bg-government-*, text-government-*, border-government-*, etc.
+     Inspired by official U.S. Government and White House design
      --------------------------------------------------------------------------- */
 
-  /* Backgrounds: warm mahogany/wood tones (darkest to lightest) */
-  --color-factory-bg: #1c120a;
-  --color-factory-surface: #2c1e12;
-  --color-factory-surface-elevated: #3d2b1a;
+  /* Backgrounds: navy blue and white (professional official aesthetic) */
+  --color-government-bg: #0a1a3e;
+  --color-government-surface: #132651;
+  --color-government-surface-elevated: #1a3563;
 
-  /* Borders: warm wood-grain brown */
-  --color-factory-border: #86644a;
-  --color-factory-border-subtle: #4a3520;
+  /* Borders: sophisticated navy and gold */
+  --color-government-border: #3d5a7a;
+  --color-government-border-subtle: #1a2540;
 
-  /* Primary metals: warm copper, dark gold, polished brass */
-  --color-factory-primary: #c89060;
-  --color-factory-secondary: #9a7420;
-  --color-factory-accent: #daa520;
-  --color-factory-glow: #f0c050;
+  /* Primary metals: official gold and silver accents */
+  --color-government-primary: #b8860b;
+  --color-government-secondary: #6b5d3f;
+  --color-government-accent: #d4a74d;
+  --color-government-glow: #e6c200;
 
-  /* Text hierarchy: warm parchment tones (brightest to most muted) */
-  --color-factory-text: #ecdcc4;
-  --color-factory-text-secondary: #bca88a;
-  --color-factory-text-muted: #8a7a62;
+  /* Text hierarchy: white to light gray (professional readability) */
+  --color-government-text: #ffffff;
+  --color-government-text-secondary: #d9e3f0;
+  --color-government-text-muted: #8a9ab5;
 
-  /* Status colors: warm-shifted but immediately recognizable */
-  --color-factory-success: #5da84a;
-  --color-factory-error: #c04030;
-  --color-factory-warning: #d4982a;
+  /* Status colors: official but recognizable */
+  --color-government-success: #4ade80;
+  --color-government-error: #f87171;
+  --color-government-warning: #fbbf24;
 
-  /* Interactive state tokens (replaces generic blue-600 accent pattern) */
-  --color-factory-active: #daa520;
-  --color-factory-active-surface: #2a1e10;
+  /* Interactive state tokens */
+  --color-government-active: #d4a74d;
+  --color-government-active-surface: #1f2e4a;
 
-  /* Semantic status surfaces (warm-shifted banners) */
-  --color-factory-success-surface: #1a2818;
-  --color-factory-success-border: #4a8a3a;
-  --color-factory-success-text: #a8d898;
-  --color-factory-error-surface: #2a1616;
-  --color-factory-error-border: #a04040;
-  --color-factory-error-text: #e8a0a0;
-  --color-factory-warning-surface: #2a2015;
-  --color-factory-warning-border: #c09030;
-  --color-factory-warning-text: #e4c888;
+  /* Semantic status surfaces (official styling) */
+  --color-government-success-surface: #051e0f;
+  --color-government-success-border: #22a356;
+  --color-government-success-text: #86efac;
+  --color-government-error-surface: #3c0f0f;
+  --color-government-error-border: #c04030;
+  --color-government-error-text: #fca5a5;
+  --color-government-warning-surface: #422806;
+  --color-government-warning-border: #d97706;
+  --color-government-warning-text: #fcd34d;
 
-  /* Faction identity tokens (per-token color branding) */
-  --color-factory-crime: #e86050;
-  --color-factory-fraud: #d4a030;
-  --color-factory-profit: #50b848;
+  /* Arc DeFi Tokens: BRIBE, CORUPT, VOTES */
+  --color-government-bribe: #ff6b6b;
+  --color-government-corupt: #d4a74d;
+  --color-government-votes: #51cf66;
 
   /* ---------------------------------------------------------------------------
      Z-Index Layering System (--z-index-*)
@@ -168,48 +168,45 @@
      Generates: animate-fade-in, animate-gear-spin, animate-pulse-glow
      --------------------------------------------------------------------------- */
   --animate-fade-in: fade-in 0.6s ease-out;
-  --animate-gear-spin: gear-spin 3s linear infinite;
   --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
 
-  /* Modal system animation tokens (Phase 54) */
+  /* Modal system animation tokens */
   --animate-iris-open: iris-open 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
   --animate-modal-close: modal-close 180ms ease-in forwards;
   --animate-content-fade-in: content-fade-in 200ms ease-out forwards;
   --animate-content-fade-out: content-fade-out 150ms ease-in forwards;
 
   /* ---------------------------------------------------------------------------
-     Component Kit Tokens (Phase 60)
-     Shared design tokens for the steampunk component kit. These generate
-     Tailwind utility classes via the standard namespaces:
-       bg-frame-parchment, text-frame-ink, duration-kit-hover, shadow-kit-*, etc.
+     Component Kit Tokens (Official/White House styling)
+     Shared design tokens for the government component kit.
      --------------------------------------------------------------------------- */
 
-  /* Frame system: parchment surface colors for kit frames and cards */
-  --color-frame-parchment: #f5e6c8;
-  --color-frame-parchment-dark: #e8d5a8;
-  --color-frame-ink: #2a1f0e;
-  --color-frame-ink-secondary: #5a4830;
-  --color-frame-brass: #c4956a;
-  --color-frame-brass-highlight: #f0c050;
-  --color-frame-brass-shadow: #5a4510;
+  /* Frame system: white paper surface for official documents */
+  --color-frame-parchment: #f5f5f5;
+  --color-frame-parchment-dark: #e8e8e8;
+  --color-frame-ink: #0a1a3e;
+  --color-frame-ink-secondary: #2c3e50;
+  --color-frame-brass: #b8860b;
+  --color-frame-brass-highlight: #d4a74d;
+  --color-frame-brass-shadow: #5a4a1a;
 
-  /* Interactive timing: weighted 200-300ms for tactile steampunk feel */
+  /* Interactive timing: weighted for official/formal feel */
   --duration-kit-hover: 250ms;
   --duration-kit-press: 200ms;
   --duration-kit-toggle: 300ms;
 
-  /* Slider component: track, fill, and brass knob */
-  --color-slider-track: #3d2b1a;
-  --color-slider-fill: #c4956a;
-  --color-slider-knob: #d4a04a;
+  /* Slider component: navy track with gold fill */
+  --color-slider-track: #1a3563;
+  --color-slider-fill: #b8860b;
+  --color-slider-knob: #d4a74d;
 
-  /* Toggle component: off/on track states and brass knob */
-  --color-toggle-off-track: #3d2b1a;
-  --color-toggle-on-track: #5da84a;
-  --color-toggle-knob: #d4a04a;
+  /* Toggle component: navy off/on with gold knob */
+  --color-toggle-off-track: #1a3563;
+  --color-toggle-on-track: #4ade80;
+  --color-toggle-knob: #d4a74d;
 
-  /* Hover glow: shared warm golden glow across all kit interactive components */
-  --shadow-kit-hover-glow: 0 0 12px rgba(240, 192, 80, 0.3);
+  /* Hover glow: official gold glow */
+  --shadow-kit-hover-glow: 0 0 12px rgba(212, 167, 77, 0.3);
 }
 
 /* Keyframes must be defined outside @theme */
@@ -221,15 +218,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes gear-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -247,7 +235,7 @@
 
 /* =============================================================================
    Modal System -- Animations, States, and Scroll Lock
-   Phase 54: Dialog-based modal with iris-open animation
+   Official Government Styling: Navy/Gold/White theme
    ============================================================================= */
 
 /* Iris aperture reveal: expands clip-path circle from the clicked scene object's
@@ -275,22 +263,22 @@
   }
 }
 
-/* Backdrop dimming + blur: factory scene stays partially visible for atmosphere. */
+/* Backdrop dimming + blur: scene stays partially visible for atmosphere. */
 @keyframes backdrop-fade-in {
   from {
     background-color: transparent;
     backdrop-filter: blur(0px);
   }
   to {
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(6px);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
   }
 }
 
 @keyframes backdrop-fade-out {
   from {
-    background-color: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(6px);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
   }
   to {
     background-color: transparent;
@@ -298,8 +286,8 @@
   }
 }
 
-/* Station content crossfade: swap content inside the dialog without
-   closing/reopening it (avoids scene flash -- RESEARCH.md Pitfall 7). */
+/* Content crossfade: swap content inside the dialog without
+   closing/reopening it. */
 @keyframes content-fade-in {
   from {
     opacity: 0;
@@ -382,24 +370,24 @@ dialog.modal-shell {
 }
 
 /* Steampunk chrome container: layered surface with brass frame.
-   Aged paper background for content readability, brass border for
-   the industrial frame aesthetic (CONTEXT.md: metal outer + paper inner). */
+   Official white paper background with navy borders for professional
+   government aesthetic. */
 .modal-chrome {
   position: relative;
   background: linear-gradient(
     135deg,
-    #f5e6c8 0%,
-    #e8d5a8 50%,
-    #f0dbb8 100%
+    #f5f5f5 0%,
+    #e8e8e8 50%,
+    #f8f8f8 100%
   );
-  border: 3px solid var(--color-factory-accent);
+  border: 3px solid var(--color-government-accent);
   border-radius: 8px;
-  /* Multi-layer shadow: metal frame ring + ambient glow + drop shadow */
+  /* Multi-layer shadow: navy frame ring + gold glow + drop shadow */
   box-shadow:
-    0 0 0 6px var(--color-factory-surface-elevated),
-    0 0 0 8px var(--color-factory-accent),
-    0 0 40px rgba(240, 192, 80, 0.15),
-    0 16px 48px rgba(0, 0, 0, 0.5);
+    0 0 0 6px var(--color-government-surface-elevated),
+    0 0 0 8px var(--color-government-accent),
+    0 0 40px rgba(212, 167, 77, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.3);
   max-height: 85vh;
   overflow: hidden;
   display: flex;
@@ -421,7 +409,7 @@ dialog.modal-shell {
   /* Replace the parchment gradient -- fill keyword paints the center slice */
   background: none;
   /* 9-slice riveted-paper frame (matches .kit-frame-asset) */
-  border: 30px solid var(--color-factory-accent);
+  border: 30px solid var(--color-government-accent);
   border-image-source: url('/frames/riveted-paper.png');
   border-image-slice: 80 fill;
   border-image-width: 30px;
@@ -438,20 +426,17 @@ dialog.modal-shell {
   .modal-chrome-kit {
     border: none;
     border-image: none;
-    /* Restore parchment background on mobile -- the desktop kit-frame uses
-       border-image-slice `fill` to paint the center, but on mobile we strip
-       the border-image (fullscreen slide-up has no frame). Without this,
-       kit-frame stations have no background at all on mobile. */
+    /* Restore white background on mobile */
     background: linear-gradient(
       135deg,
-      #f5e6c8 0%,
-      #e8d5a8 50%,
-      #f0dbb8 100%
+      #f5f5f5 0%,
+      #e8e8e8 50%,
+      #f8f8f8 100%
     );
   }
 }
 
-/* Decorative corner bolts: small brass circles at each corner of the frame.
+/* Decorative corner bolts: small gold circles at each corner of the frame.
    CSS radial gradient creates the domed rivet appearance. Pointer-events
    disabled so they don't interfere with close button or content clicks. */
 .modal-bolt {
@@ -461,9 +446,9 @@ dialog.modal-shell {
   border-radius: 50%;
   background: radial-gradient(
     circle at 40% 40%,
-    #f0c050 0%,
-    #8b6914 60%,
-    #5a4510 100%
+    #e6c200 0%,
+    #b8860b 60%,
+    #6b5d3f 100%
   );
   box-shadow:
     inset 0 1px 2px rgba(255, 255, 255, 0.3),
@@ -501,26 +486,26 @@ dialog.modal-shell {
   right: -36px;
 }
 
-/* Fixed header with brass rule divider.
-   Station name text on aged paper background, dark text for readability.
+/* Fixed header with gold rule divider.
+   Official white background with dark navy text for readability.
    Right padding accommodates the close button. */
 .modal-header {
   padding: 1rem 1.5rem;
   padding-right: 3.5rem;
-  border-bottom: 2px solid var(--color-factory-accent);
-  box-shadow: 0 1px 0 rgba(240, 192, 80, 0.3);
+  border-bottom: 2px solid var(--color-government-accent);
+  box-shadow: 0 1px 0 rgba(212, 167, 77, 0.3);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   position: relative;
 }
 
-/* Station title styling: serif heading on paper surface. */
+/* Station title styling: serif heading on white surface. */
 .modal-header h2 {
   margin: 0;
   font-family: var(--font-heading, var(--font-cinzel, serif));
   font-size: var(--text-subheading);
-  color: #2a1f0e;
+  color: #0a1a3e;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -532,7 +517,7 @@ dialog.modal-shell {
   flex: 1;
   padding: 1.5rem;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-factory-secondary) var(--color-factory-surface);
+  scrollbar-color: var(--color-government-secondary) var(--color-government-surface);
   overscroll-behavior: contain;
 }
 

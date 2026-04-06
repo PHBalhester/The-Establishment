@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${cinzel.variable} ${ibmPlexMono.variable}`}>
-      <body className="antialiased bg-factory-bg text-factory-text">
+      <body className="antialiased bg-government-bg text-government-text">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -25,6 +25,7 @@
     "@sqds/multisig": "^2.1.4",
     "@switchboard-xyz/on-demand": "^3.7.3",
     "@tanstack/react-query": "^5.96.2",
+    "next": "^16.2.2",
     "react": "^19.2.4",
     "viem": "^2.47.10",
     "wagmi": "^3.6.0"

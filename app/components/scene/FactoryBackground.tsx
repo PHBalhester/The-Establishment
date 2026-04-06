@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * FactoryBackground -- Full-viewport steampunk factory scene container.
+ * FactoryBackground -- Full-viewport government protocol scene container.
  *
  * Renders the optimized WebP background image with progressive loading:
- * 1. bg-factory-bg dark warm brown shows instantly (no white flash)
+ * 1. bg-government-bg dark navy shows instantly (no white flash)
  * 2. Blurred thumbnail fades in via Next.js Image placeholder="blur"
  * 3. Full-resolution image sharpens when loaded
  *
@@ -13,10 +13,8 @@
  * within the viewport at the native 1.81:1 aspect ratio (5568/3072). Both the
  * background image AND children (overlay stations) live inside this same container,
  * so they share one coordinate space. Letterbox/pillarbox bars are filled by the
- * parent's bg-factory-bg, making the bars seamless. All stations stay visible and
+ * parent's bg-government-bg, making the bars seamless. All stations stay visible and
  * clickable at every viewport size.
- *
- * Phase 53 (Asset Pipeline). Interactive scene assembled in Phase 55.
  */
 
 import Image from 'next/image';
@@ -29,9 +27,9 @@ interface FactoryBackgroundProps {
 export default function FactoryBackground({ children }: FactoryBackgroundProps) {
   return (
     <div
-      className="relative w-full h-screen bg-factory-bg overflow-hidden"
+      className="relative w-full h-screen bg-government-bg overflow-hidden"
       role="img"
-      aria-label="Factory scene depicting Dr. Fraudsworth's steampunk finance factory"
+      aria-label="The Establishment official protocol scene"
     >
       {/* Scene container: "contain" strategy — scales entire scene to fit
            within the viewport while maintaining 1.81:1 ratio. min() ensures
@@ -48,7 +46,7 @@ export default function FactoryBackground({ children }: FactoryBackgroundProps) 
       >
         <Image
           src={SCENE_DATA.background.src}
-          alt="Dr. Fraudsworth's Finance Factory"
+          alt="The Establishment official protocol"
           fill
           sizes="min(100vw, calc(100vh * 1.81))"
           quality={80}

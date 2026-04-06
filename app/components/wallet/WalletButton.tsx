@@ -31,7 +31,7 @@ export function WalletButton() {
   // Wallet connecting -- show loading state
   if (isConnecting) {
     return (
-      <div className="h-10 w-32 bg-factory-surface-elevated rounded-lg animate-pulse" />
+      <div className="h-10 w-32 bg-government-surface-elevated rounded-lg animate-pulse" />
     );
   }
 
@@ -46,14 +46,14 @@ export function WalletButton() {
             setTimeout(() => setCopied(false), 1500);
           }}
           title="Click to copy full address"
-          className="text-sm font-mono text-factory-text-secondary bg-factory-surface-elevated border border-factory-border rounded-lg px-3 py-2 hover:border-factory-accent transition-colors cursor-pointer"
+          className="text-sm font-mono text-government-text-secondary bg-government-surface-elevated border border-government-border rounded-lg px-3 py-2 hover:border-government-accent transition-colors cursor-pointer"
         >
           {copied ? "Copied!" : truncateAddress(address)}
         </button>
         <button
           onClick={() => disconnect()}
           disabled={isDisconnecting}
-          className="text-sm text-factory-text-secondary hover:text-factory-text bg-factory-surface-elevated border border-factory-border rounded-lg px-3 py-2 transition-colors disabled:opacity-50"
+          className="text-sm text-government-text-secondary hover:text-government-text bg-government-surface-elevated border border-government-border rounded-lg px-3 py-2 transition-colors disabled:opacity-50"
         >
           {isDisconnecting ? "..." : "Disconnect"}
         </button>
@@ -66,7 +66,7 @@ export function WalletButton() {
     <>
       <button
         onClick={() => setModalOpen(true)}
-        className="text-sm font-medium text-factory-bg bg-factory-accent hover:brightness-110 rounded-lg px-4 py-2 transition-all brass-button"
+        className="text-sm font-medium text-government-bg bg-government-accent hover:brightness-110 rounded-lg px-4 py-2 transition-all brass-button"
       >
         Connect Wallet
       </button>
