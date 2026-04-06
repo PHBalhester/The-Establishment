@@ -10,9 +10,9 @@ import "./globals.css";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Dr. Fraudsworth",
+  title: "The Establishment",
   description:
-    "Dr. Fraudsworths' Fantastical Finance Factory - the maniacal three token game where you can earn rewards!",
+    "The Establishment - the maniacal three token game where you can earn rewards!",
 };
 
 export default function RootLayout({

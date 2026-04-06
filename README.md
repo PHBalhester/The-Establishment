@@ -1,8 +1,8 @@
-# Dr. Fraudsworth's Finance Factory
+# The Establishment
 
 A tax-driven DeFi protocol on Solana where every swap fuels epochs, carnage events, and real SOL yield for stakers.
 
-Dr. Fraudsworth's Finance Factory is a live, mainnet-deployed Solana protocol built around a novel economic loop: every token swap incurs a configurable tax that flows into the Carnage Fund. Epochs advance via Switchboard VRF randomness, and when Carnage strikes, accumulated taxes are redistributed back to token holders. PROFIT token stakers earn real SOL yield from trading activity -- not inflationary rewards.
+The Establishment is a live, mainnet-deployed Solana protocol built around a novel economic loop: every token swap incurs a configurable tax that flows into the Carnage Fund. Epochs advance via Switchboard VRF randomness, and when Carnage strikes, accumulated taxes are redistributed back to token holders. PROFIT token stakers earn real SOL yield from trading activity -- not inflationary rewards.
 
 ## Live Protocol
 
