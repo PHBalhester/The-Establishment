@@ -1,53 +1,56 @@
 /**
- * @dr-fraudsworth/shared - Barrel export
+ * @the-establishment/shared - Barrel export
  *
- * Re-exports all shared constants, program IDs, mints, seeds, and devnet config.
- * Consumed by app/ via transpilePackages in next.config.ts.
+ * Re-exports all shared constants and types for The Establishment on Arc Network.
+ * 
+ * Token Mapping (Solana -> Arc):
+ *   CRIME  -> BRIBE
+ *   FRAUD  -> CORUPT
+ *   PROFIT -> VOTES
+ *   SOL    -> USDC
  */
 
 export {
-  PROGRAM_IDS,
-  MINTS,
+  // Token constants
   TOKEN_DECIMALS,
+  TOKENS,
+  TOKEN_NAMES,
+  
+  // Staking constants
   MINIMUM_STAKE,
   COOLDOWN_SECONDS,
-  SOL_POOL_FEE_BPS,
+  
+  // Pool constants
+  POOL_FEE_BPS,
+  
+  // Vault constants
   VAULT_CONVERSION_RATE,
-  VAULT_SEEDS,
-  SEEDS,
-  SLOTS_PER_EPOCH,
-  MS_PER_SLOT,
-  DEVNET_PDAS,
-  DEVNET_CURVE_PDAS,
-  CURVE_TARGET_SOL,
-  CURVE_TARGET_TOKENS,
-  MAX_TOKENS_PER_WALLET,
-  MIN_PURCHASE_SOL,
-  CURVE_SELL_TAX_BPS,
-  CURVE_DEADLINE_SLOTS,
-  DEVNET_POOLS,
-  DEVNET_POOL_CONFIGS,
-  TOKEN_PROGRAM_FOR_MINT,
+  
+  // Epoch constants
+  EPOCH_DURATION_SECONDS,
+  CARNAGE_PROBABILITY_BPS,
+  TAX_RATES,
+  EpochPhase,
+  
+  // Tax distribution
+  TAX_DISTRIBUTION,
+  
+  // Trading pairs
   VALID_PAIRS,
-  resolvePool,
-  resolvePoolWithConfig,
-  resolveRoute,
-  resolveRouteWithConfig,
-  DEVNET_PDAS_EXTENDED,
-  TREASURY_PUBKEY,
-  PROTOCOL_ALT,
-  CLUSTER_CONFIG,
-  getClusterConfig,
-} from "./constants";
+  isValidPair,
+  
+  // Formatting helpers
+  formatTokenAmount,
+  parseTokenAmount,
+} from "./constants-evm";
 
-export type {
-  TokenSymbol,
-  SwapInstruction,
-  PoolConfig,
-  VaultConvertConfig,
-  RouteConfig,
-  ClusterName,
-  ClusterConfig,
-} from "./constants";
+export type { TokenSymbol } from "./constants-evm";
 
-export { DEVNET_ALT, DEVNET_RPC_URL } from "./programs";
+// Legacy exports for backwards compatibility during migration
+// These map old Solana names to new Arc names
+export const LEGACY_TOKEN_MAP = {
+  CRIME: "BRIBE",
+  FRAUD: "CORUPT",
+  PROFIT: "VOTES",
+  SOL: "USDC",
+} as const;

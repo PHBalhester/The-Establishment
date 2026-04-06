@@ -14,23 +14,17 @@
     "db:studio": "npx drizzle-kit studio"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.32.1",
-    "@dr-fraudsworth/shared": "file:../shared",
-    "@solana-program/memo": "0.11.0",
-    "@solana-program/system": "0.11.0",
-    "@solana-program/token": "0.10.0",
-    "@solana/spl-token": "0.4.14",
-    "@solana/wallet-adapter-base": "^0.9.27",
-    "@solana/wallet-adapter-react": "^0.15.39",
-    "@solana/web3.js": "1.98.4",
-    "buffer": "6.0.3",
+    "@tanstack/react-query": "^5.60.0",
+    "@the-establishment/shared": "file:../shared",
     "drizzle-orm": "0.45.1",
     "lightweight-charts": "5.1.0",
     "next": "16.1.6",
     "postgres": "3.4.8",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "tsx": "4.21.0"
+    "tsx": "4.21.0",
+    "viem": "^2.21.0",
+    "wagmi": "^2.12.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.18",

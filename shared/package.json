@@ -1,13 +1,10 @@
 {
-  "name": "@dr-fraudsworth/shared",
+  "name": "@the-establishment/shared",
   "version": "0.0.1",
-  "description": "Shared constants, PDA seeds, and program IDs for Dr. Fraudsworth",
+  "description": "Shared constants and types for The Establishment on Arc Network",
   "main": "index.ts",
   "types": "index.ts",
-  "peerDependencies": {
-    "@solana/web3.js": "^1.95.5"
-  },
   "dependencies": {
-    "@solana/spl-token": "^0.4.14"
+    "viem": "^2.21.0"
   }
 }

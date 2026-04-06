@@ -1,8 +1,9 @@
 "use client";
 
-import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WagmiProvider } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { wagmiConfig } from "@/lib/wagmi-config";
 import { ModalProvider } from "@/components/modal/ModalProvider";
-import { ClusterConfigProvider } from "@/providers/ClusterConfigProvider";
 import { SettingsProvider } from "@/providers/SettingsProvider";
 import { AudioProvider } from "@/providers/AudioProvider";
 import { ProtocolStateProvider } from "@/providers/ProtocolStateProvider";
@@ -10,48 +11,54 @@ import { ModalRoot } from "@/components/modal/ModalShell";
 import { ToastProvider, ToastContainer, useToast } from "@/components/toast/ToastProvider";
 import { SplashScreen } from "@/components/onboarding/SplashScreen";
 import { QuickMuteButton } from "@/components/audio/QuickMuteButton";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useRef, useMemo } from "react";
+import { useAccount } from "wagmi";
+import { useEffect, useRef, useState } from "react";
+
+// Create a client for react-query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 /** Fires "Wallet connected" toast on fresh wallet connection.
- *  Watches useWallet().connected -- when it transitions false->true, fires toast.
+ *  Watches useAccount().isConnected -- when it transitions false->true, fires toast.
  *  useRef tracks previous state to detect the transition. */
 function WalletConnectionToast() {
   const { showToast } = useToast();
-  const { connected } = useWallet();
+  const { isConnected } = useAccount();
   const wasConnected = useRef(false);
 
   useEffect(() => {
-    if (connected && !wasConnected.current) {
+    if (isConnected && !wasConnected.current) {
       showToast("success", "Wallet connected");
     }
-    wasConnected.current = connected;
-  }, [connected, showToast]);
+    wasConnected.current = isConnected;
+  }, [isConnected, showToast]);
 
   return null;
 }
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  // RPC endpoint: /api/rpc proxy keeps the Helius API key server-side.
-  // The proxy forwards allowed JSON-RPC methods to the real Helius endpoint.
-  // Must use full URL — @solana/web3.js Connection rejects relative paths.
-  const endpoint = typeof window !== "undefined"
-    ? `${window.location.origin}/api/rpc`
-    : "http://localhost:3000/api/rpc";
-  // Empty array: all target wallets (Phantom, Solflare, Backpack) implement
-  // wallet-standard and auto-register via WalletProvider's built-in detection.
-  // No explicit adapter constructors needed.
-  const wallets = useMemo(() => [], []);
+  // Fix hydration issues with wagmi
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        {/* Provider tree: Connection > Wallet > Settings > Audio > Modal > ProtocolState > Toast
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        {/* Provider tree: Wagmi > Query > Settings > Audio > Modal > ProtocolState > Toast
             AudioProvider after SettingsProvider so it can read muted/volume.
             AudioProvider before ModalProvider so modal content can useAudio().
 
             ModalProvider inside wallet providers so modal content can
-            access wallet hooks like useProtocolWallet. ModalRoot renders the
+            access wallet hooks. ModalRoot renders the
             singleton <dialog> element -- always present in the DOM regardless
             of which page is active.
 
@@ -61,30 +68,28 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             persist after the modal closes.
 
             ProtocolStateProvider inside ModalProvider because it uses
-            useVisibility() which calls useModal(). Creates a single SSE
-            connection per tab -- all useProtocolState() consumers share it.
+            useVisibility() which calls useModal(). Creates a single connection
+            per tab -- all useProtocolState() consumers share it.
 
             QuickMuteButton is a sibling of SplashScreen -- renders the
             floating mute toggle after audio is initialized. */}
-        <ClusterConfigProvider>
-          <SettingsProvider>
-            <AudioProvider>
-              <ModalProvider>
-                <ProtocolStateProvider>
-                  <ToastProvider>
-                    {children}
-                    <ModalRoot />
-                    <SplashScreen />
-                    <QuickMuteButton />
-                    <ToastContainer />
-                    <WalletConnectionToast />
-                  </ToastProvider>
-                </ProtocolStateProvider>
-              </ModalProvider>
-            </AudioProvider>
-          </SettingsProvider>
-        </ClusterConfigProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+        <SettingsProvider>
+          <AudioProvider>
+            <ModalProvider>
+              <ProtocolStateProvider>
+                <ToastProvider>
+                  {mounted ? children : null}
+                  <ModalRoot />
+                  <SplashScreen />
+                  <QuickMuteButton />
+                  <ToastContainer />
+                  <WalletConnectionToast />
+                </ToastProvider>
+              </ProtocolStateProvider>
+            </ModalProvider>
+          </AudioProvider>
+        </SettingsProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
