@@ -11,6 +11,9 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "npm run dev --workspace=app",
+    "build": "npm run build --workspace=app",
+    "start": "npm run start --workspace=app",
     "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
     "devnet-vrf": "npx ts-node tests/devnet-vrf.ts",
     "verify-ids": "tsx scripts/verify-program-ids.ts",
