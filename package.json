@@ -25,10 +25,7 @@
     "@sqds/multisig": "^2.1.4",
     "@switchboard-xyz/on-demand": "^3.7.3"
   },
-  "overrides": {
-    "react": "19.2.3",
-    "react-dom": "19.2.3"
-  },
+  
   "devDependencies": {
     "@solana/spl-token": "^0.4.9",
     "@types/chai": "^4.3.11",
