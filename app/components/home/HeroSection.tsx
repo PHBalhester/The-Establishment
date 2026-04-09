@@ -1,21 +1,12 @@
 import Image from "next/image";
 import { WalletButton } from "@/components/wallet/WalletButton";
+import { BackgroundVideo } from "./BackgroundVideo";
 
 export function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-government-bg">
-      {/* Background image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/backgrounds/government-scene.jpg"
-          alt="The Establishment official headquarters"
-          fill
-          className="object-cover opacity-20"
-          priority
-        />
-        {/* Navy overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-government-bg/80 via-government-bg/60 to-government-bg" />
-      </div>
+      {/* Background video — político recebendo suborno em loop */}
+      <BackgroundVideo />
 
       {/* Gold top bar — Casa Branca style */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-government-accent z-10" />
